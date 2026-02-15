@@ -1,0 +1,43 @@
+
+<h4>Add User</h4>
+
+<form action="{{ url_for('admin.add_users') }}" method="post">
+  <div class="row">
+    <input type="text" name="username" placeholder="username">
+    <input type="text" name="password" placeholder="password">
+    <select name="role">
+      <option value="admin">admin</option>
+      <option value="moderator">moderator</option>
+    </select>
+  </div>
+  <div style="height:10px"></div>
+  <button style="width: 200px; display: block; margin-left: auto;" type="submit">Add</button>
+</form>
+
+<h4 style="margin-top:18px;">Users list</h4>
+
+<div class="table-wrap">
+  <table>
+    <tr>
+      <th>N</th>
+      <th>Username</th>
+      <th>Role</th>
+      <th>Actions</th>
+    </tr>
+    {% for user in users %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ user.username }}</td>
+      <td><span class="badge">{{ user.role }}</span></td>
+      <td class="td-btn">
+        <form action="{{ url_for('admin.delete_user', user_id=user.id ) }}" method="post" style="display:inline;">
+          <button class="table-btn del-btn" type="submit"
+            onclick="return confirm('Rostdan o\'chirmoqchimisiz?');">
+            Delete
+          </button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>

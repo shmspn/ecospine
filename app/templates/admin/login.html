@@ -1,0 +1,13 @@
+
+{% extends 'base_admin.html' %}
+{% block title %}Login{% endblock %}
+{% block body %}
+<div class="login" style="display: flex; align-items: center; text-align: center; flex-direction: column;">
+    <h3>login page</h3>
+    <form action="{{ url_for('admin.login') }}" method='post'>
+        <input type="text" name="username" placeholder="username"><br><br>
+        <input type="text" name="password" placeholder="password"><br><br>
+        <button style="width: 100%" type="submit">Submit</button>
+    </form>
+</div>
+{% endblock %}

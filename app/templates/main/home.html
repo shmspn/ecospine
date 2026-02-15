@@ -1,0 +1,136 @@
+{% extends "base_home.html" %}
+{% block title %}Matraslar{% endblock %}
+
+{% block body %}
+
+  <div class="filters-row">
+    <!-- 1) Sort -->
+    <div class="sort-box">
+      {% set cur_sort = request.args.get('sort','new') %}
+      <select id="sortSelect">
+        <option value="new" {% if cur_sort=='new' %}selected{% endif %}>Newest</option>
+        <option value="price_asc" {% if cur_sort=='price_asc' %}selected{% endif %}>Price ↑</option>
+        <option value="price_desc" {% if cur_sort=='price_desc' %}selected{% endif %}>Price ↓</option>
+        <option value="discount_desc" {% if cur_sort=='discount_desc' %}selected{% endif %}>Discount ↓</option>
+      </select>
+    </div>
+
+    <!-- 2) Narx modal open -->
+    <button type="button" class="chip" data-open="#priceModal">
+      Narx
+      {% if request.args.get('min_price') or request.args.get('max_price') %}
+        <span class="dot"></span>
+      {% endif %}
+    </button>
+
+    <!-- 3) Razmer modal open -->
+    <button type="button" class="chip" data-open="#sizeModal">
+      Razmer
+      {% if selected_sizes %}
+        <span class="dot"></span>
+      {% endif %}
+    </button>
+
+    <!-- 4) Reset: bosilishi bilan qo‘llanadi -->
+    <a class="chip reset" href="{{ url_for('home.index') }}">Barchasi</a>
+  </div>
+
+  <div class="modal" id="priceModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title">Narx bo‘yicha</div>
+        <button type="button" class="x" data-close>✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-grid">
+          <input type="number" id="minPrice" placeholder="Dan" value="{{ request.args.get('min_price','') }}">
+          <input type="number" id="maxPrice" placeholder="Gacha" value="{{ request.args.get('max_price','') }}">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="ghost" data-close>Cancel</button>
+          <button type="button" id="applyPrice">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="sizeModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title">Razmer tanlang</div>
+        <button type="button" class="x" data-close>✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="sizes-list">
+          {% for s in sizes %}
+            {% set s_clean = (s or '')|string|trim %}
+            <label class="check">
+              <input type="checkbox" class="sizeCheck" value="{{ s_clean }}"
+                {% if s_clean in selected_sizes %}checked{% endif %}>
+              <span>{{ s_clean }}</span>
+            </label>
+          {% endfor %}
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="ghost" id="clearSizes">Clear</button>
+          <button type="button" id="applySizes">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Matraslar katalogi</h2>
+
+    <div class="grid">
+      {% for p in products %}
+        <a class="card" href="{{ url_for('home.product_detail', product_id=p.id) }}">
+          {% if p.image %}
+            <img class="card-img" src="{{ url_for('static', filename='uploads/' ~ p.image) }}" alt="{{ p.title }}">
+          {% else %}
+            <div class="card-img"></div>
+          {% endif %}
+
+          <div class="card-body">
+            <p class="title">{{ p.title }}</p>
+
+            {% if p.discount_percent and p.discount_percent > 0 %}
+              <div class="meta">
+                {% if p.size %}<span class="tag">{{ p.size }}</span>{% endif %}
+                <span style="font-size: 12px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background-color: #bff725; color: rgb(24, 24, 24);">
+                  -{{ p.discount_percent }}%
+                </span>
+              </div>
+              <div class="price" style="display:flex; justify-content: space-between; align-items:baseline; flex-wrap:wrap;">
+                  <span>
+                    {{ p.price | uzs }} so'm
+                  </span>
+                  <strong>
+                    {{ p.final_price | uzs }} so'm
+                  </strong>
+              </div>
+            {% else %}
+              <div class="meta">
+                {% if p.size %}<span class="tag">{{ p.size }}</span>{% endif %}
+              </div>
+              <div class="price">
+                  <strong>{{ p.final_price | uzs }} so'm</strong>
+              </div>
+            {% endif %}
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+{% endblock %}
+
+<!-- {% block sticky %}
+  <div class="sticky-call">
+    <a class="btn btn-primary" href="tel:+998913573363">📞 Qo‘ng‘iroq</a>
+    <a class="btn" href="#callback">✍️ Yozib qoldirish</a>
+  </div>
+{% endblock %} -->

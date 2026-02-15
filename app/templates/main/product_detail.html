@@ -1,0 +1,84 @@
+{% extends "base_home.html" %}
+<!-- {% block title %}{{ product.title }}{% endblock %} -->
+
+{% block body %}
+
+  <div class="section">
+    <div class="card" id="card">
+      {% if product.image %}
+        <img class="card-img" id="card-img" style="height:320px;border-radius:18px;"
+             src="{{ url_for('static', filename='uploads/' ~ product.image) }}"
+             alt="{{ product.title }}">
+      {% endif %}
+      <div class="card-body" id="card-body">
+            <p class="title">{{ product.title }}</p>
+
+            {% if product.discount_percent and product.discount_percent > 0 %}
+              <div class="meta" id="meta">
+                {% if product.size %}<span class="tag">{{ product.size }}</span>{% endif %}
+                <span style="font-size: 12px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background-color: #bff725; color: rgb(24, 24, 24);">
+                  -{{ product.discount_percent }}%
+                </span>
+              </div>
+              <div class="price" id="price" style="display:flex; justify-content: space-between; align-items:baseline; flex-wrap:wrap;">
+                  <span>
+                    {{ product.price|uzs }} so‘m
+                  </span>
+                  <strong>
+                    {{ product.final_price | uzs }} so‘m
+                  </strong>
+              </div>
+            {% else %}
+              <div class="meta">
+                {% if product.size %}<span class="tag">{{ product.size }}</span>{% endif %}
+              </div>
+              <div class="price">
+                {% if cur == 'usd' %}
+                  <strong>${{ (product.price / usd_to_uzs) | round(2) | int }}</strong>
+                {% else %}
+                  <strong>{{ product.price | uzs }} so‘m</strong>
+                {% endif %}
+              </div>
+            {% endif %}
+            {% if product.description %}
+            <p style="color:var(--muted); line-height:1.6; margin-top:10px;">
+                {{ product.description }}
+            </p>
+            {% endif %}
+          </div>
+
+      <!-- <div class="card-body">
+        <div class="meta" style="margin-top:0;">
+          {% if product.size %}<span class="tag">Razmer: {{ product.size }}</span>{% endif %}
+        </div>
+
+        {# NARX / CHEGIRMA #}
+        {% set d = product.discount_percent or 0 %}
+        {% if d > 0 %}
+          <div class="price">
+            <span class="sub" style="text-decoration:line-through; opacity:.65;">
+              {{ product.price|uzs }} so‘m
+            </span>
+            <strong style="font-size:22px;">
+              {{ (product.price * (100 - d) / 100)|uzs }} so‘m
+            </strong>
+            <span class="tag">-{{ d }}%</span>
+          </div>
+        {% else %}
+          <div class="price">
+            <strong style="font-size:22px;">
+              {{ product.price|uzs }} so‘m
+            </strong>
+          </div>
+        {% endif %}
+
+        {% if product.description %}
+          <p style="color:var(--muted); line-height:1.6; margin-top:10px;">
+            {{ product.description }}
+          </p>
+        {% endif %}
+      </div> -->
+    </div>
+  </div>
+
+{% endblock %}

@@ -1,0 +1,10 @@
+<h4>Valyuta kursi</h4>
+
+<p style="margin-top:12px;">Hozirgi kurs: <span class="badge">1$ = {{ settings.usd_to_uzs }} so‘m</span></p>
+<form action="{{ url_for('admin.settings') }}" method="post">
+  <div class="row">
+    <input style="width: 220px;" type="number" name="usd_to_uzs" min="1" value="{{ settings.usd_to_uzs }}" required>
+  </div>
+  <div style="height:20px"></div>
+  <button style="width: 220px;" type="submit">Saqlash</button>
+</form>
