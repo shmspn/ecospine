@@ -1,4 +1,5 @@
 
+
 (function(){
   const form = document.getElementById('filtersForm');
 
@@ -45,9 +46,36 @@
     form.submit();
   });
 
+
+
+function formatUZS(value){
+  const digits = value.replace(/\D/g, ""); // faqat sonlar
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
+function cleanNumber(value){
+  return value.replace(/\s/g, ""); // probellarni olib tashlash
+}
+
+function attachMoneyFormatter(el){
+  el.addEventListener("input", ()=>{
+    const start = el.selectionStart;
+    const before = el.value;
+
+    el.value = formatUZS(el.value);
+
+    const diff = el.value.length - before.length;
+    el.setSelectionRange(start + diff, start + diff);
+  });
+}
+
   // ------- Price Apply -------
   const minPrice = document.getElementById('minPrice');
   const maxPrice = document.getElementById('maxPrice');
+
+  attachMoneyFormatter(minPrice);
+  attachMoneyFormatter(maxPrice);
+
   const minPriceInput = document.getElementById('minPriceInput');
   const maxPriceInput = document.getElementById('maxPriceInput');
 
@@ -58,8 +86,9 @@
     const minHidden = document.getElementById('minPriceInput');
     const maxHidden = document.getElementById('maxPriceInput');
 
-    const minVal = (minEl.value || '').trim();
-    const maxVal = (maxEl.value || '').trim();
+    // FORMATNI TOZALAYMIZ (<<< muhim qism)
+    const minVal = cleanNumber(minEl.value || '');
+    const maxVal = cleanNumber(maxEl.value || '');
 
     // min
     if (minVal) {
@@ -122,3 +151,56 @@
   // Page reload bo‘lganda ham hidden sizes to‘g‘ri turishi uchun:
   rebuildSizesHidden();
 })();
+
+
+
+
+(function(){
+  const modal = document.getElementById('quickViewModal');
+
+  const titleEl = document.getElementById('qvTitle');
+  const sizeEl  = document.getElementById('qvSize');
+  const imgEl   = document.getElementById('qvImage');
+  const descEl    = document.getElementById('description')
+
+  const oldPriceEl = document.getElementById('qvOldPrice');
+  const newPriceEl = document.getElementById('qvNewPrice');
+
+  document.querySelectorAll('.product-card').forEach(card=>{
+    card.addEventListener('click', (e)=>{
+      e.preventDefault();
+
+      const title = card.dataset.title;
+      const size  = card.dataset.size;
+      const price = card.dataset.price;
+      const final = card.dataset.final;
+      const desc  = card.dataset.description;
+      const discount = parseInt(card.dataset.discount || "0");
+
+      titleEl.textContent = title;
+      sizeEl.textContent  = size;
+      descEl.textContent  = desc;
+      imgEl.src = card.dataset.image;
+
+      if(discount > 0){
+        oldPriceEl.textContent = price + " so‘m";
+        oldPriceEl.style.display = "block";
+      } else {
+        oldPriceEl.style.display = "none";
+      }
+
+      newPriceEl.textContent = final + " so‘m";
+
+      modal.classList.add('open');
+    });
+  });
+
+  document.getElementById('qvClose').onclick = () => modal.classList.remove('open');
+
+  modal.addEventListener('click', (e)=>{
+    if(e.target === modal) modal.classList.remove('open');
+  });
+
+})();
+
+
