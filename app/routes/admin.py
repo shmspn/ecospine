@@ -99,8 +99,15 @@ def settings():
 @admin_bp.route('/')
 @moderator_required
 def admin_panel():
+    
+    sizes = [
+        (r[0] or "").strip()
+        for r in db.session.query(Product.size).distinct().order_by(Product.size).all()
+        if (r[0] or "").strip()
+    ]
+
     products = Product.query.order_by(Product.id.desc()).all()
-    return render_template('admin/admin_panel.html', page='products', products=products)
+    return render_template('admin/admin_panel.html', page='products', products=products, sizes=sizes)
 
 
 @admin_bp.route('/add_users', methods=['GET', 'POST'])
@@ -143,11 +150,12 @@ def delete_user(user_id):
 @admin_bp.route("/products", methods=["GET"])
 def products():
     q = (request.args.get("q") or "").strip()
-    size = (request.args.get("size") or "").strip()
     discount = request.args.get("discount")  # "1" bo'ladi
     min_price = request.args.get("min_price")
     max_price = request.args.get("max_price")
     sort = request.args.get("sort") or "new"
+
+    selected_sizes = [s.strip() for s in request.args.getlist("size") if s and s.strip()]
 
     query = Product.query
 
@@ -159,8 +167,8 @@ def products():
             Product.size.ilike(like),
         ))
 
-    if size:
-        query = query.filter(Product.size == size)
+    if selected_sizes:
+            query = query.filter(Product.size.in_(selected_sizes))
 
     if discount == "1":
         query = query.filter((Product.discount_percent or 0) > 0)
@@ -186,15 +194,19 @@ def products():
     else:
         query = query.order_by(Product.id.desc())
 
-    products = query.all()
+    products = query.order_by(Product.id.desc()).all()
 
-    sizes = [r[0] for r in db.session.query(Product.size).distinct().order_by(Product.size).all()]
+    sizes = [
+        (r[0] or "").strip()
+        for r in db.session.query(Product.size).distinct().order_by(Product.size).all()
+        if (r[0] or "").strip()
+    ]
    
     return render_template(
         "admin/admin_panel.html",
         page="products",
         products=products,
-        sizes=sizes,   # <= MUHIM: template'ga uzatyapmiz
+        sizes=sizes,  # <= MUHIM: template'ga uzatyapmiz   
     )
 
 

@@ -24,29 +24,27 @@
 <!--------------------------------------------------------------------------->
 <h4 style="margin-top:18px;">Search & Filter</h4>
 
-<form method="get" action="{{ url_for('admin.products') }}">
+<form method="get" action="{{ url_for('admin.products') }}" id="get-form">
   <div class="row-2">
     <input style="width: 100%;" type="text" name="q" placeholder="Search by title/size/description"
            value="{{ request.args.get('q','') }}">
 
-   <div style="display: flex; gap: 10px; width: 100%;">
-     <select name="size">
-      <option value="">Barcha razmerlar</option>
-      {% for s in sizes %}
-        {% set selected_size = request.args.get('size') %}
-        <option value="{{ s }}" {% if selected_size == (s|trim) %}selected{% endif %}>
-          {{ s }}
-        </option>
-      {% endfor %}
-    </select>
-
+   <div style="display: flex; gap: 5px; width: 100%;">
+     
     <select name="sort">
-      {% set cur_sort = request.args.get('sort','new') %}
-      <option value="new" {% if cur_sort=='new' %}selected{% endif %}>Eng yangi</option>
-      <option value="price_asc" {% if cur_sort=='price_asc' %}selected{% endif %}>Arzonidan</option>
-      <option value="price_desc" {% if cur_sort=='price_desc' %}selected{% endif %}>Qimmatidan</option>
-      <option value="discount_desc" {% if cur_sort=='discount_desc' %}selected{% endif %}>Chegirmalisidan</option>
+       {% set cur_sort = request.args.get('sort','new') %}
+       <option value="new" {% if cur_sort=='new' %}selected{% endif %}>Eng yangi</option>
+       <option value="price_asc" {% if cur_sort=='price_asc' %}selected{% endif %}>Arzonidan</option>
+       <option value="price_desc" {% if cur_sort=='price_desc' %}selected{% endif %}>Qimmatidan</option>
+       <option value="discount_desc" {% if cur_sort=='discount_desc' %}selected{% endif %}>Chegirmalisidan</option>
     </select>
+      
+    <div id="sizeHiddenBox"></div>
+    <button type="button" class="chip" data-open="#sizeModal">
+      Razmer
+      {% if selected_sizes %}<span class="dot"></span>{% endif %}
+    </button>
+
    </div>
   </div>
 
@@ -61,11 +59,11 @@
            value="{{ request.args.get('max_price','') }}">
     </div>
 
-    <div style="display: flex; justify-content: end; gap: 10px; width: 100%;">
-        <label style="color: var(--muted); font-size: 14px; display: flex; gap: 10px; align-items: center;">
+    <div style="display: flex; justify-content: space-between; gap: 10px; width: 100%;">
+        <label style=" width: 40%; color: var(--muted); font-size: 14px; display: flex; gap: 6px; align-items: center; justify-content: center;">
           Faqat chegirmali
 
-          <input style="width: 30px; height: 30px; cursor: pointer;" type="checkbox" name="discount" value="1"
+          <input style="width: 27px; height: 27px; cursor: pointer;" type="checkbox" name="discount" value="1"
               {% if request.args.get('discount') == '1' %}checked{% endif %}>
         </label>
 
@@ -101,7 +99,7 @@
         <td>
           {% if product.image %}
             <img src="{{ url_for('static', filename='uploads/' ~ product.image) }}" 
-                 class="admin-product-img"
+                 class="admin-product-img card"
 
                  data-id="{{ product.id }}"
                  data-title="{{ product.title }}"
@@ -114,16 +112,30 @@
           {% endif %}
         </td>
 
-        <td style="min-width: 200px;">{{ product.title }}</td>
+        <td style="min-width: 200px;"
+            class="card"
+
+            data-id="{{ product.id }}"
+            data-title="{{ product.title }}"
+            data-size="{{ product.size }}"
+            data-price="{{ product.price | int}}"
+            data-discount="{{ product.discount_percent or 0 }}"
+            data-description="{{ product.description or '' }}"
+            data-image="{{ product.image }}"
+        >
+          <p>{{ product.title }}</p>
+        </td>
+        
         <td><span class="badge">{{ product.size }}</span></td>
         <td style="min-width: 95px;">{{ product.price | uzs }}</td>
 
-        <td>
-          <form action="{{ url_for('admin.set_discount', product_id=product.id) }}" method="post" style="display:flex; gap:10px;">
+        <td style="text-align: center; ">
+          <span style="display: block" class="badge">{{ product.discount_percent }}</span>
+          <!-- <form action="{{ url_for('admin.set_discount', product_id=product.id) }}" method="post" style="display:flex; gap:10px;">
             <input type="number" name="discount_percent" min="0" max="90"
                    value="{{ product.discount_percent or 0 }}" style="width:60px;">
             <button class="table-btn" type="submit">Set</button>
-          </form>
+          </form> -->
         </td>
 
         <td class="desc-cell">
@@ -176,8 +188,35 @@
 
         </div>
 
-
       </form>
+    </div>
+  </div>
+
+
+  <div class="modal" id="sizeModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title">Razmer tanlang</div>
+        <button type="button" class="x" data-close>✕</button>
+      </div>
+
+      <div>
+        <div class="sizes-list">
+          {% for s in sizes %}
+            {% set s_clean = (s or '')|string|trim %}
+            <label class="check">
+              <input type="checkbox" class="sizeCheck" value="{{ s_clean }}"
+                    {% if s_clean in selected_sizes %}checked{% endif %}>
+              <span>{{ s_clean }}</span>
+            </label>
+          {% endfor %}
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="ghost" id="clearSizes">Clear</button>
+          <button type="button" id="applySizes">Apply</button>
+        </div>
+      </div>
     </div>
   </div>
 

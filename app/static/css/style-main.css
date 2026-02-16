@@ -37,7 +37,7 @@ textarea{min-height:92px; resize:vertical}
 .fab-call{position: fixed;right: 10px;bottom: 10px;width: 58px;height: 58px;border-radius: 999px;display: grid;
   place-items: center;font-size: 22px;text-decoration: none;background: linear-gradient(135deg, #1dff16, #00ff5e);
   color: #06100a;box-shadow: 0 16px 40px rgba(0,0,0,.35);border: 1px solid rgba(255,255,255,.14);z-index: 9999;
-  animation: fabPulse 2.2s infinite;}
+  animation: fabPulse 2s infinite;}
 .fab-call.tg{right:10px; bottom: 80px;background: linear-gradient(135deg, #1884ff, #00b7ff);animation: fabPulse-tg 2.2s infinite;}
 
 
@@ -285,10 +285,6 @@ textarea{min-height:92px; resize:vertical}
   font-size: 14px;
   line-height: 1.25;
   margin-bottom: 6px;
-  /* display:-webkit-box; */
-  /* -webkit-line-clamp: 2; */
-  /* -webkit-box-orient: vertical;
-  overflow:hidden; */
 }
 
 .meta{
