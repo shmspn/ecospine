@@ -116,11 +116,15 @@ form .row{
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap:10px;
 }
+.file {
+  display: flex;
+  align-content: center;
+  padding: 0 12px;
+}
 form .row-2{
   display:flex;
   justify-content: space-between;
   gap:10px;
-  align-items:center;
 }
 input, select{
   width:100%;
@@ -157,9 +161,7 @@ button:active{transform: translateY(0);}
 
 /* small buttons in table */
 .table-btn{
-  padding:8px 10px;
   border-radius:10px;
-  font-size: 13px;
 }
 .del-btn{
   background: linear-gradient(90deg, #ff4d4d, #ff7a4d);
@@ -182,7 +184,7 @@ table{
 }
 tr {border-bottom:1px solid var(--border);}
 th, td{
-  padding:5px 10px;
+  padding:5px;
   text-align:left;
   vertical-align: middle;
 }
@@ -200,8 +202,8 @@ th{
 tr:hover td{background: rgba(255,255,255,.03);}
 
 td img{
-  width:52px;
-  height:52px;
+  width:60px;
+  height:60px;
   object-fit: cover;
   border-radius:10px;
   border:1px solid var(--border);
@@ -244,10 +246,11 @@ td img{
   .admin-panel{flex-direction: column;}
   .sidebar{position: relative; top:0; width: 100%;}
   .main-section{width: 100%;}
-  /* table{width: 100%;} */
+  .desc-cell{max-width: 200px;}
   form .row{grid-template-columns: 1fr;}
   form .row-2{flex-direction: column;}
   .login form{width: 100%;}
+  .file{padding: 10px 12px;}
 }
 
 /* Modal */
@@ -307,7 +310,7 @@ td img{
   background-color: transparent;
   border-radius: 10px;
   color: rgba(255, 255, 255, 0.8);
-  padding: 5px;
+  padding: 10px 12px;
 }
 
 .admin-product-img{
@@ -325,4 +328,31 @@ td img{
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 25px;
+}
+
+
+.edit-image-block{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-bottom: 10px;
+}
+
+.edit-preview{
+  width:150px;
+  height:150px;
+  object-fit: cover;
+  border-radius: 12px;
+  border:1px solid rgba(255,255,255,.15);
+  margin-bottom: 10px;
+}
+
+.img-upload{
+  cursor:pointer;
+  font-size:13px;
+  opacity:.8;
+}
+
+.img-upload input{
+  display:none;
 }

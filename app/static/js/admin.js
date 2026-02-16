@@ -37,6 +37,8 @@
   const priceEl = document.getElementById('editPrice');
   const discountEl = document.getElementById('editDiscount');
   const descEl = document.getElementById('editDescription');
+  const previewEl = document.getElementById('editPreview');
+  const imageInput = document.getElementById('editImageInput');
 
   const form = document.getElementById('editForm');
   const deleteBtn = document.getElementById('deleteBtn');
@@ -49,8 +51,23 @@
       priceEl.value = img.dataset.price;
       discountEl.value = img.dataset.discount;
       descEl.value = img.dataset.description;
+      previewEl.src = "/static/uploads/" + img.dataset.image;
+      imageInput.value = "";
 
       form.action = "/admin/update_product";
+
+      imageInput.addEventListener("change", ()=>{
+        const file = imageInput.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = (e)=>{
+          previewEl.src = e.target.result;
+        };
+
+        reader.readAsDataURL(file);
+      });
 
       deleteBtn.onclick = () => {
         if(confirm("Rostdan o‘chirasizmi?")){

@@ -1,6 +1,7 @@
 from flask import Flask
 from config import Config
 from app.extentions import db
+import os
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
@@ -14,6 +15,10 @@ def create_app():
 
     app.register_blueprint(home_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
+
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+    app.config["UPLOAD_FOLDER"] = os.path.join(BASE_DIR, "static", "uploads")
 
     @app.template_filter("uzs")
     def uzs(value):

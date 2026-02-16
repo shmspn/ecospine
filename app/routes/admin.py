@@ -208,6 +208,12 @@ def update_product():
     product.price = int(request.form.get("price") or 0)
     product.discount_percent = int(request.form.get("discount_percent") or 0)
     product.description = request.form.get("description")
+    image = request.files.get("image")
+
+    if image and image.filename:
+        filename = secure_filename(image.filename)
+        image.save(os.path.join(current_app.config["UPLOAD_FOLDER"], filename))
+        product.image = filename
 
     db.session.commit()
     return redirect(url_for("admin.products"))
