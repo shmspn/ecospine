@@ -89,7 +89,6 @@
         <th>Price</th>
         <th>Discount</th>
         <th>Description</th>
-        <th>Actions</th>
       </tr>
 
       {% for product in products %}
@@ -98,7 +97,17 @@
 
         <td>
           {% if product.image %}
-            <img src="{{ url_for('static', filename='uploads/' ~ product.image) }}" alt="">
+            <img src="{{ url_for('static', filename='uploads/' ~ product.image) }}" 
+                 class="admin-product-img"
+
+                 data-id="{{ product.id }}"
+                 data-title="{{ product.title }}"
+                 data-size="{{ product.size }}"
+                 data-price="{{ product.price | int}}"
+                 data-discount="{{ product.discount_percent or 0 }}"
+                 data-description="{{ product.description or '' }}"
+                 data-image="{{ product.image }}"
+            >
           {% endif %}
         </td>
 
@@ -121,22 +130,50 @@
             {{ product.description }}
           </span>
         </td>
-
-        <td class="td-btn">
-          <form action="{{ url_for('admin.delete_product', product_id=product.id ) }}"
-                method="post" style="display:inline;">
-            <button class="table-btn del-btn" type="submit"
-                    onclick="return confirm('Rostdan o\'chirasizmi?');">
-              Delete
-            </button>
-          </form>
-        </td>
       </tr>
       {% endfor %}
     </table>
   </div>
 
-  <!-- Modal -->
+  <!-- modal product edit -->
+  <div class="modal" id="editModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title">Edit Product</div>
+        <button type="button" class="x" id="editClose">✕</button>
+      </div>
+
+      <form method="post" id="editForm">
+        <div class="modal-body edit">
+
+          <input type="hidden" name="product_id" id="editId">
+
+          <input type="text" name="title" id="editTitle" placeholder="Title">
+          <div style="display: flex; gap: 15px;">
+            <input type="text" name="size" id="editSize" placeholder="Size">
+            <input type="number" name="price" id="editPrice" placeholder="Price">
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <label for="">Chegirma</label>
+            <input type="number" name="discount_percent" id="editDiscount" placeholder="Discount %">
+          </div>
+
+          <textarea name="description" rows="10" id="editDescription" placeholder="Description"></textarea>
+
+          <div class="modal-actions">
+            <button type="submit">Saqlash</button>
+            <button type="button" class="danger" id="deleteBtn">Delete</button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+
+  <!-- Modal description view -->
   <div class="modal" id="descModal">
     <div class="modal-card">
       <div class="modal-head">
@@ -147,37 +184,6 @@
     </div>
   </div>
 
-  <script>
-    (function(){
-      const modal = document.getElementById('descModal');
-      const body  = document.getElementById('modalBody');
-      const title = document.getElementById('modalTitle');
-      const close = document.getElementById('modalClose');
-
-      function openModal(t, text){
-        title.textContent = t || 'Description';
-        body.textContent = text || '';
-        modal.classList.add('open');
-      }
-      function closeModal(){
-        modal.classList.remove('open');
-      }
-
-      document.addEventListener('click', (e) => {
-        const el = e.target.closest('.desc-text');
-        if(!el) return;
-        openModal(el.dataset.title, el.dataset.desc);
-      });
-
-      close.addEventListener('click', closeModal);
-      modal.addEventListener('click', (e) => {
-        if(e.target === modal) closeModal();
-      });
-      document.addEventListener('keydown', (e) => {
-        if(e.key === 'Escape') closeModal();
-      });
-    })();
-  </script>
 
 {% else %}
   <p>Hali mahsulot yo'q</p>

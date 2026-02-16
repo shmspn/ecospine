@@ -148,6 +148,10 @@ button{
   cursor:pointer;
   transition:.15s ease;
 }
+.danger{
+  background: linear-gradient(90deg, #d72c2c, #6d24d9);
+}
+
 button:hover{transform: translateY(-1px);filter: brightness(1.03);}
 button:active{transform: translateY(0);}
 
@@ -289,4 +293,36 @@ td img{
   color: rgba(233,238,252,.9);
   line-height: 1.55;
   white-space: pre-wrap;
+}
+.modal-body.edit{
+  line-height: none;
+  white-space: inherit;
+}
+.modal-body.edit input{
+  margin: 10px 0;
+}
+.modal-body.edit textarea{
+  margin: 10px 0;
+  width: 100%;
+  background-color: transparent;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 5px;
+}
+
+.admin-product-img{
+  border-radius:6px;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.admin-product-img:hover{
+  transform: scale(1.12);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+}
+
+.modal-actions{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
 }

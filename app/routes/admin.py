@@ -197,6 +197,23 @@ def products():
         sizes=sizes,   # <= MUHIM: template'ga uzatyapmiz
     )
 
+
+@admin_bp.route("/update_product", methods=["POST"])
+def update_product():
+    product_id = request.form.get("product_id")
+    product = Product.query.get_or_404(product_id)
+
+    product.title = request.form.get("title")
+    product.size = request.form.get("size")
+    product.price = int(request.form.get("price") or 0)
+    product.discount_percent = int(request.form.get("discount_percent") or 0)
+    product.description = request.form.get("description")
+
+    db.session.commit()
+    return redirect(url_for("admin.products"))
+
+
+
 @admin_bp.route('/add_products', methods=['GET', 'POST'])
 @moderator_required
 def add_product():
