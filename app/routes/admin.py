@@ -296,3 +296,9 @@ def delete_product(product_id):
     flash(f'"{product.title}" o\'chirildi', 'success')
     return redirect(url_for('admin.products'))
 
+@admin_bp.route("/toggle_product/<int:product_id>", methods=["POST"])
+def toggle_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    product.is_active = not bool(product.is_active)
+    db.session.commit()
+    return redirect(url_for("admin.products"))

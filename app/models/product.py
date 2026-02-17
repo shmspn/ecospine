@@ -13,6 +13,7 @@ class Product(db.Model):
     description = db.Column(db.Text, nullable=False)
     image = db.Column(db.String(255))
     discount_percent = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.now)
 

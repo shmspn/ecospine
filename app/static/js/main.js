@@ -157,6 +157,7 @@ function attachMoneyFormatter(el){
 
 (function(){
   const modal = document.getElementById('quickViewModal');
+  const globalTg = document.getElementById('global_tg')
 
   const titleEl = document.getElementById('qvTitle');
   const sizeEl  = document.getElementById('qvSize');
@@ -165,6 +166,13 @@ function attachMoneyFormatter(el){
 
   const oldPriceEl = document.getElementById('qvOldPrice');
   const newPriceEl = document.getElementById('qvNewPrice');
+
+  const tgLink = document.getElementById('qvTgLink');
+
+  function buildTgLink(username, text){
+    const u = username.replace('@','').trim();
+    return `https://t.me/${u}?text=${encodeURIComponent(text)}`;
+  }
 
   document.querySelectorAll('.product-card').forEach(card=>{
     card.addEventListener('click', (e)=>{
@@ -176,6 +184,7 @@ function attachMoneyFormatter(el){
       const final = card.dataset.final;
       const desc  = card.dataset.description;
       const discount = parseInt(card.dataset.discount || "0");
+      const tgUser = card.dataset.tg_user || 'saidkhans';
 
       titleEl.textContent = title;
       sizeEl.textContent  = size;
@@ -191,7 +200,17 @@ function attachMoneyFormatter(el){
 
       newPriceEl.textContent = final + " so‘m";
 
+      const msg =
+      `Salom! Menga shu mahsulot haqida ma'lumot kerak:\n` +
+      `📦 ${title}\n` +
+      `📏 Razmer: ${size}\n` +
+      `💰 Narx: ${price}\n\n` +
+      `Yetkazib berish bormi?`;
+
+      tgLink.href = buildTgLink(tgUser, msg);
+
       modal.classList.add('open');
+      globalTg.classList.add('close')
     });
   });
 
@@ -199,6 +218,7 @@ function attachMoneyFormatter(el){
 
   modal.addEventListener('click', (e)=>{
     if(e.target === modal) modal.classList.remove('open');
+    globalTg.classList.remove('close')
   });
 
 })();

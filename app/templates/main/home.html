@@ -94,7 +94,8 @@
         data-price="{{ product.price | uzs }}"
         data-final="{{ product.final_price | uzs }}"
         data-discount="{{ product.discount_percent or 0 }}"
-        data-image="{{ url_for('static', filename='uploads/' ~ product.image) }}">
+        data-image="{{ url_for('static', filename='uploads/' ~ product.image) }}"
+        data-tg_user="saidkhans">
 
         <div class="img-wrap">
           {% if product.discount_percent and product.discount_percent > 0 %}
@@ -149,6 +150,13 @@
             </div>
           </div>
           <p style="margin: 0;" id="description"></p>
+          <a href="#" target="_blank" rel="noopener noreferrer" class="qv-action tg" id="qvTgLink">
+            <svg viewBox="0 0 24 24" width="22">
+                <path fill="rgb(0, 150, 255)"
+                d="M9.04 15.57l-.38 5.35c.54 0 .77-.23 1.05-.5l2.52-2.41 5.22 3.82c.96.53 1.64.25 1.9-.89l3.44-16.12h.01c.32-1.49-.54-2.07-1.47-1.72L1.7 9.7c-1.46.57-1.44 1.39-.25 1.76l5.3 1.66L19.02 6.1c.58-.35 1.11-.16.68.19"/>
+            </svg>
+            Ushbu mahsulot haqida so'rash uchun
+          </a>
         </div>
       </div>
     </div>

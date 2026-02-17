@@ -17,7 +17,7 @@ def index():
     # multi size
     selected_sizes = [s.strip() for s in request.args.getlist("sizes") if s.strip()]
 
-    query = Product.query
+    query = Product.query.filter(Product.is_active.is_(True))
 
     # search
     if q:

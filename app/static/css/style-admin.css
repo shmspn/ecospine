@@ -369,3 +369,14 @@ td img{
 @media (max-width: 600px) {
   .sizes-list{grid-template-columns: 1fr 1fr;}
 }
+
+
+.status-btn{
+  padding:6px 10px;
+  border-radius:10px;
+  border:1px solid rgba(0,0,0,.15);
+  cursor:pointer;
+  font-weight:700;
+}
+.status-btn.on{ background:#37c200b4; }
+.status-btn.off{ background:#940000c0; }

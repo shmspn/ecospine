@@ -89,6 +89,7 @@
         <th>Size</th>
         <th>Price</th>
         <th>Discount</th>
+        <th>Status</th>
         <th>Description</th>
       </tr>
 
@@ -137,6 +138,15 @@
             <button class="table-btn" type="submit">Set</button>
           </form> -->
         </td>
+        <td>
+          <form action="{{ url_for('admin.toggle_product', product_id=product.id) }}" method="post" style="display:inline;">
+            {% if product.is_active %}
+              <button type="submit" class="status-btn on">Active</button>
+            {% else %}
+              <button type="submit" class="status-btn off">Hidden</button>
+            {% endif %}
+          </form>
+        </td>
 
         <td class="desc-cell">
           <span class="desc-text"
@@ -176,6 +186,7 @@
 
           <div style="display: flex; gap: 15px;">
             <input style="width: 70%;" type="file" name="image" id="editImageInput" accept="image/*">
+            
             <input style="width: 30%;" type="number" name="discount_percent" id="editDiscount" placeholder="Discount %">
           </div>
 
