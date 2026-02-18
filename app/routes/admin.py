@@ -8,14 +8,16 @@ from flask import (
     render_template,
     current_app
 )
-import os
-from werkzeug.utils import secure_filename
-from app.models import User, Product, Settings
+from werkzeug.utils import save_upload
+from app.models import User, Product, Settings, ProductImage
 from app.extentions import db
 from functools import wraps
 from sqlalchemy import or_
+import json, os
+
 
 admin_bp = Blueprint('admin', __name__)
+
 
 @admin_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -210,6 +212,7 @@ def products():
     )
 
 
+
 @admin_bp.route("/update_product", methods=["POST"])
 def update_product():
     product_id = request.form.get("product_id")
@@ -220,15 +223,69 @@ def update_product():
     product.price = int(request.form.get("price") or 0)
     product.discount_percent = int(request.form.get("discount_percent") or 0)
     product.description = request.form.get("description")
-    image = request.files.get("image")
+    images = request.files.getlist("images")
 
-    if image and image.filename:
-        filename = secure_filename(image.filename)
-        image.save(os.path.join(current_app.config["UPLOAD_FOLDER"], filename))
-        product.image = filename
+    # ✅ delete qilingan rasmlar ro'yxati
+    deleted = json.loads(request.form.get("delete_images", "[]"))
+
+    if deleted:
+        (ProductImage.query
+            .filter(ProductImage.product_id == product.id,
+                    ProductImage.filename.in_(deleted))
+            .delete(synchronize_session=False)
+        )
+        db.session.commit()
+
+    upload_dir = os.path.join(current_app.root_path, "static", "uploads")
+    for fn in deleted:
+        path = os.path.join(upload_dir, fn)
+        if os.path.isfile(path):
+            os.remove(path)
+
+    has_main = any(img.is_main for img in product.images)
+
+    for img in images:
+        if img and img.filename:
+            filename = save_upload(img, current_app.config["UPLOAD_FOLDER"])
+            db.session.add(ProductImage(
+                product_id=product.id,
+                filename=filename,
+                is_main=(not has_main)  # agar hali main bo'lmasa birinchisini main qil
+            ))
+            has_main = True
 
     db.session.commit()
     return redirect(url_for("admin.products"))
+
+@admin_bp.route('/delete_product/<int:product_id>', methods=['POST'])
+@admin_required
+def delete_product(product_id):
+    product = Product.query.get_or_404(product_id)
+
+    title = product.title
+
+    # 1) Shu product'ga tegishli rasmlar filename'larini yig'amiz
+    images = ProductImage.query.filter_by(product_id=product.id).all()
+    filenames = [img.filename for img in images if img.filename]
+
+    # 2) Diskdan o'chiramiz
+    upload_dir = os.path.join(current_app.root_path, "static", "uploads")
+    for fn in filenames:
+        # path traversal'dan saqlanish: faqat basename
+        safe_name = os.path.basename(fn)
+        path = os.path.join(upload_dir, safe_name)
+        if os.path.isfile(path):
+            try:
+                os.remove(path)
+            except OSError:
+                pass  # xohlasangiz log yozing
+
+    db.session.delete(product)
+    db.session.commit()
+
+    flash(f'"{product.title}" o\'chirildi', 'success')
+    return redirect(url_for('admin.products'))
+
 
 
 
@@ -240,33 +297,41 @@ def add_product():
         price = request.form.get('price', type=int)
         description = request.form.get('description')
         size = request.form.get("size")
-        file = request.files.get("image")
+        images = request.files.getlist("images")
         discount_percent = (request.form.get("discount_percent") or "").strip()
+        
         try:
             d = int(discount_percent)
         except ValueError:
             d = 0
 
-        filename = None
-
-        if file and file.filename:
-            filename = secure_filename(file.filename)
-            upload_path = os.path.join(current_app.root_path, "static/uploads", filename)
-            file.save(upload_path)
 
         product = Product(
             title=title, 
             price=price,
             size=size,
             description=description,
-            image=filename,
             discount_percent=d,
             created_by=session['user_id']
         )
         db.session.add(product)
+        db.session.flush()
+
+        for i, img in enumerate(images):
+            if img and img.filename:
+                filename = save_upload(img, current_app.config["UPLOAD_FOLDER"])
+                db.session.add(ProductImage(
+                    product_id=product.id,
+                    filename=filename,
+                    is_main=(i == 0)  # birinchi rasm main
+                ))
+
         db.session.commit()
+
         flash('Product added successfully', 'success')
         return redirect(url_for('admin.products'))
+    
+
     
 @admin_bp.route('/products/<int:product_id>/discount', methods=['POST'])
 @moderator_required
@@ -283,18 +348,8 @@ def set_discount(product_id):
     product.discount_percent = d
     db.session.commit()
 
-    print("DEBUG discount:", product_id, "raw=", d_raw, "parsed=", d, "saved=", product.discount_percent)
-
     return redirect(url_for('admin.products'))
 
-@admin_bp.route('/delete_product/<int:product_id>', methods=['POST'])
-@admin_required
-def delete_product(product_id):
-    product = Product.query.get_or_404(product_id)
-    db.session.delete(product)
-    db.session.commit()
-    flash(f'"{product.title}" o\'chirildi', 'success')
-    return redirect(url_for('admin.products'))
 
 @admin_bp.route("/toggle_product/<int:product_id>", methods=["POST"])
 def toggle_product(product_id):

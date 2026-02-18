@@ -155,13 +155,15 @@ function attachMoneyFormatter(el){
 
 
 
+// ------------- Quick View Modal ------------------
+
 (function(){
   const modal = document.getElementById('quickViewModal');
   const globalTg = document.getElementById('global_tg')
 
   const titleEl = document.getElementById('qvTitle');
   const sizeEl  = document.getElementById('qvSize');
-  const imgEl   = document.getElementById('qvImage');
+  const imagesEl = document.getElementById('modal-images');
   const descEl    = document.getElementById('description')
 
   const oldPriceEl = document.getElementById('qvOldPrice');
@@ -174,9 +176,9 @@ function attachMoneyFormatter(el){
     return `https://t.me/${u}?text=${encodeURIComponent(text)}`;
   }
 
-  document.querySelectorAll('.product-card').forEach(card=>{
+  document.querySelectorAll('.carousel-track').forEach(card=>{
     card.addEventListener('click', (e)=>{
-      e.preventDefault();
+      e.preventDefault()
 
       const title = card.dataset.title;
       const size  = card.dataset.size;
@@ -185,11 +187,19 @@ function attachMoneyFormatter(el){
       const desc  = card.dataset.description;
       const discount = parseInt(card.dataset.discount || "0");
       const tgUser = card.dataset.tg_user || 'saidkhans';
-
+      const images = JSON.parse(card.dataset.images)
+    
       titleEl.textContent = title;
       sizeEl.textContent  = size;
       descEl.textContent  = desc;
-      imgEl.src = card.dataset.image;
+
+      console.log(imagesEl)
+      imagesEl.innerHTML = '';
+      images.forEach(im => {
+        img = document.createElement('img')
+        img.src = `/static/uploads/${im}`
+        imagesEl.appendChild(img)
+      })
 
       if(discount > 0){
         oldPriceEl.textContent = price + " so‘m";
@@ -201,11 +211,10 @@ function attachMoneyFormatter(el){
       newPriceEl.textContent = final + " so‘m";
 
       const msg =
-      `Salom! Menga shu mahsulot haqida ma'lumot kerak:\n` +
-      `📦 ${title}\n` +
-      `📏 Razmer: ${size}\n` +
-      `💰 Narx: ${price}\n\n` +
-      `Yetkazib berish bormi?`;
+      `Assalom alaykum! Menga shu mahsulot haqida ma'lumot kerak:\n` +
+      `${title}\n` +
+      `Razmer: ${size}\n` +
+      `Narx: ${final}\n\n` ;
 
       tgLink.href = buildTgLink(tgUser, msg);
 
@@ -214,13 +223,35 @@ function attachMoneyFormatter(el){
     });
   });
 
-  document.getElementById('qvClose').onclick = () => modal.classList.remove('open');
+  document.getElementById('qvClose').onclick = () => {
+    modal.classList.remove('open')
+    globalTg.classList.remove('close')
+  };
 
   modal.addEventListener('click', (e)=>{
     if(e.target === modal) modal.classList.remove('open');
-    globalTg.classList.remove('close')
   });
 
 })();
 
 
+
+
+
+// ----------- Carousel ----------------------
+
+document.querySelectorAll('.carousel').forEach(carousel => {
+  const track = carousel.querySelector('.carousel-track');
+  const slides = track.children;
+  let index = 0;
+
+  carousel.querySelector('.next').onclick = () => {
+    index = (index + 1) % slides.length;
+    track.style.transform = `translateX(-${index * 100}%)`;
+  };
+
+  carousel.querySelector('.prev').onclick = () => {
+    index = (index - 1 + slides.length) % slides.length;
+    track.style.transform = `translateX(-${index * 100}%)`;
+  };
+});

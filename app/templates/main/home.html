@@ -35,7 +35,59 @@
     <a class="chip reset" href="{{ url_for('home.index') }}">Barchasi</a>
   </div>
 
-  <div class="modal" id="priceModal">
+  <div class="section">
+    <h2>Matraslar katalogi</h2>
+
+    <div class="products-grid">
+    {% for product in products %}
+      <div class="product-card" href="#">
+
+        <div class="img-wrap">
+          {% if product.discount_percent and product.discount_percent > 0 %}
+            <div class="badge-discount">-{{ product.discount_percent }}%</div>
+          {% endif %}
+          
+          <div class="carousel">
+            <a class="carousel-track"
+                data-title="{{ product.title }}"
+                data-size="{{ product.size }}"
+                data-description="{{ product.description }}"
+                data-price="{{ product.price | uzs }}"
+                data-final="{{ product.final_price | uzs }}"
+                data-discount="{{ product.discount_percent or 0 }}"
+                data-images='{{ (product.images | map(attribute="filename") | list) | tojson }}'
+                data-tg_user="saidkhans">
+              {% for img in product.images %}
+                <img src="{{ url_for('static', filename='uploads/' ~ img.filename) }}">
+              {% endfor %}
+            </a>
+            <button class="prev">‹</button>
+            <button class="next">›</button>
+          </div>
+          <div class="img-fallback">No image</div>
+        </div>
+
+        <div class="card-body">
+          <div class="title">{{ product.title }}</div>
+          <div class="meta">{{ product.size }}</div>
+          {% if product.discount_percent and product.discount_percent > 0 %}
+            <div class="price-row">
+              <span class="old-price">{{ product.price | uzs }} so‘m</span>
+              <span class="new-price">{{ product.final_price | uzs }} so‘m</span>
+            </div>
+          {% else %}
+            <div class="price-row">
+              <span class="new-price">{{ product.price | uzs }} so‘m</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+    </div>
+  </div>
+
+  <!-- Modal windows section -->
+ <div class="modal" id="priceModal">
     <div class="modal-card">
       <div class="modal-head">
         <div class="modal-title">Narx bo‘yicha</div>
@@ -82,52 +134,6 @@
     </div>
   </div>
 
-  <div class="section">
-    <h2>Matraslar katalogi</h2>
-
-    <div class="products-grid">
-    {% for product in products %}
-      <a class="product-card" href="#"
-        data-title="{{ product.title }}"
-        data-size="{{ product.size }}"
-        data-description="{{ product.description }}"
-        data-price="{{ product.price | uzs }}"
-        data-final="{{ product.final_price | uzs }}"
-        data-discount="{{ product.discount_percent or 0 }}"
-        data-image="{{ url_for('static', filename='uploads/' ~ product.image) }}"
-        data-tg_user="saidkhans">
-
-        <div class="img-wrap">
-          {% if product.discount_percent and product.discount_percent > 0 %}
-            <div class="badge-discount">-{{ product.discount_percent }}%</div>
-          {% endif %}
-
-          {% if product.image %}
-            <img src="{{ url_for('static', filename='uploads/' ~ product.image) }}" alt="{{ product.title }}">
-          {% else %}
-            <div class="img-fallback">No image</div>
-          {% endif %}
-        </div>
-
-        <div class="card-body">
-          <div class="title">{{ product.title }}</div>
-          <div class="meta">{{ product.size }}</div>
-          {% if product.discount_percent and product.discount_percent > 0 %}
-            <div class="price-row">
-              <span class="old-price">{{ product.price | uzs }} so‘m</span>
-              <span class="new-price">{{ product.final_price | uzs }} so‘m</span>
-            </div>
-          {% else %}
-            <div class="price-row">
-              <span class="new-price">{{ product.price | uzs }} so‘m</span>
-            </div>
-          {% endif %}
-        </div>
-      </a>
-
-    {% endfor %}
-    </div>
-  </div>
 
   <div class="modal" id="quickViewModal">
     <div class="modal-card quick-view">
@@ -138,7 +144,12 @@
       <div class="modal-body">
         <div class="qv-grid">
           <div class="qv-image-wrap">
-            <img id="qvImage">
+            <div class="carousel">
+              <div class="carousel-track" id="modal-images">
+              </div>
+              <button type="button" class="prev">‹</button>
+              <button type="button" class="next">›</button>
+            </div>
             <div class="qv-info">
               <div class="qv-size" id="qvSize"></div>
 

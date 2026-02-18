@@ -1,140 +1,285 @@
 
-(function(){
-  const modal = document.getElementById('descModal');
-  const body  = document.getElementById('modalBody');
-  const title = document.getElementById('modalTitle');
-  const close = document.getElementById('modalClose');
-  function openModal(t, text){
-    title.textContent = t || 'Description';
-    body.textContent = text || '';
-    modal.classList.add('open');
-  }
-  function closeModal(){
-    modal.classList.remove('open');
-  }
-  document.addEventListener('click', (e) => {
-    const el = e.target.closest('.desc-text');
-    if(!el) return;
+
+// ---------------- Desc modal ----------------
+(() => {
+  const modal = document.getElementById("descModal");
+  const body = document.getElementById("modalBody");
+  const title = document.getElementById("modalTitle");
+  const closeBtn = document.getElementById("modalClose");
+
+  if (!modal || !body || !title || !closeBtn) return;
+
+  const openModal = (t, text) => {
+    title.textContent = t || "Description";
+    body.textContent = text || "";
+    modal.classList.add("open");
+  };
+
+  const closeModal = () => modal.classList.remove("open");
+
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest(".desc-text");
+    if (!el) return;
     openModal(el.dataset.title, el.dataset.desc);
   });
-  close.addEventListener('click', closeModal);
-  modal.addEventListener('click', (e) => {
-    if(e.target === modal) closeModal();
+
+  closeBtn.addEventListener("click", closeModal);
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
   });
-  document.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape') closeModal();
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
   });
 })();
 
 
+// ✅ NEW: Carousel index state (har carousel uchun alohida index saqlaymiz)
+const __carouselIndex = new WeakMap(); // ✅ NEW
+const __carouselGo = (carousel, newIndex) => { // ✅ NEW
+  const track = carousel.querySelector(".carousel-track");
+  if (!track) return;
+  const slides = track.children;
+  if (!slides.length) return;
 
-(function(){
-  const modal = document.getElementById('editModal');
-  const idEl = document.getElementById('editId');
-  const titleEl = document.getElementById('editTitle');
-  const sizeEl = document.getElementById('editSize');
-  const priceEl = document.getElementById('editPrice');
-  const discountEl = document.getElementById('editDiscount');
-  const descEl = document.getElementById('editDescription');
-  const previewEl = document.getElementById('editPreview');
-  const imageInput = document.getElementById('editImageInput');
+  const len = slides.length;
+  let idx = newIndex % len;
+  if (idx < 0) idx += len;
 
-  const form = document.getElementById('editForm');
-  const deleteBtn = document.getElementById('deleteBtn');
+  __carouselIndex.set(carousel, idx);
+  track.style.transform = `translateX(-${idx * 100}%)`;
+};
+const __carouselGetIndex = (carousel) => __carouselIndex.get(carousel) ?? 0; // ✅ NEW
+const __carouselReset = (carousel) => __carouselGo(carousel, 0); // ✅ NEW
 
-  document.querySelectorAll('.card').forEach(img=>{
-    img.addEventListener('click', ()=>{
-      idEl.value = img.dataset.id;
-      titleEl.value = img.dataset.title;
-      sizeEl.value = img.dataset.size;
-      priceEl.value = img.dataset.price;
-      discountEl.value = img.dataset.discount;
-      descEl.value = img.dataset.description;
-      previewEl.src = "/static/uploads/" + img.dataset.image;
-      imageInput.value = "";
 
-      form.action = "/admin/update_product";
+// ---------------- Edit modal (admin update) ----------------
+(() => {
+  const modal = document.getElementById("editModal");
+  const form = document.getElementById("editForm");
+  const deleteBtn = document.getElementById("deleteBtn"); // siz comment qilgansiz
+  const idEl = document.getElementById("editId");
+  const titleEl = document.getElementById("editTitle");
+  const sizeEl = document.getElementById("editSize");
+  const priceEl = document.getElementById("editPrice");
+  const discountEl = document.getElementById("editDiscount");
+  const descEl = document.getElementById("editDescription");
+  const imagesEl = document.getElementById("carousel-images");
 
-      imageInput.addEventListener("change", ()=>{
-        const file = imageInput.files[0];
-        if (!file) return;
+  const imageInput = document.getElementById("editImageInput");
 
-        const reader = new FileReader();
+  const closeBtn = document.getElementById("editClose");
 
-        reader.onload = (e)=>{
-          previewEl.src = e.target.result;
-        };
+    // ✅ NEW: delete tugma + hidden input
+  const imgDeleteBtn = document.getElementById("imgDeleteBtn"); // ✅ NEW (HTML’da qo‘ying)
+  const deleteImagesInput = document.getElementById("deleteImages"); // ✅ NEW (hidden input)
+  let deletedImages = []; // ✅ NEW (state)
 
-        reader.readAsDataURL(file);
+  const open = () => modal.classList.add("open");
+  const close = () => modal.classList.remove("open");
+
+    const resetDeleteState = () => { // ✅ NEW
+    deletedImages = [];
+    if (deleteImagesInput) deleteImagesInput.value = "[]";
+  };
+
+  // ✅ event delegation: bitta click listener
+  document.addEventListener("click", (e) => {
+    const card = e.target.closest(".card");
+    if (!card) return;
+
+    e.preventDefault();
+
+    idEl.value = card.dataset.id || "";
+    titleEl.value = card.dataset.title || "";
+    sizeEl.value = card.dataset.size || "";
+    priceEl.value = card.dataset.price || "";
+    discountEl.value = card.dataset.discount || "";
+    descEl.value = card.dataset.description || "";
+
+    if (imageInput) imageInput.value = "";
+
+     // ✅ NEW: modal ochilganda delete state reset
+    resetDeleteState(); // ✅ NEW
+
+    // rasmlar
+    if (imagesEl) {
+      let images = [];
+      try {
+        images = card.dataset.images ? JSON.parse(card.dataset.images) : [];
+      } catch {
+        images = [];
+      }
+
+      imagesEl.innerHTML = "";
+      images.forEach((fn) => {
+        const img = document.createElement("img");
+        img.src = `/static/uploads/${fn}`;
+        img.alt = "";
+        img.dataset.filename = fn; // ✅ NEW (delete uchun kerak)
+        imagesEl.appendChild(img);
       });
 
-      deleteBtn.onclick = () => {
-        if(confirm("Rostdan o‘chirasizmi?")){
-          const f = document.createElement("form");
-          f.method = "post";
-          f.action = "/admin/delete_product/" + img.dataset.id;
-          document.body.appendChild(f);
-          f.submit();
+      // ✅ NEW: modal ochilganda carousel index 0 ga qaytsin
+      const editCarousel = modal.querySelector(".carousel"); // ✅ NEW
+      if (editCarousel) __carouselReset(editCarousel); // ✅ NEW
+    }
+
+    form.action = "/admin/update_product";
+
+    deleteBtn.onclick = () => {
+      if (!confirm("Rostdan o‘chirasizmi?")) return;
+      const f = document.createElement("form");
+      f.method = "post";
+      f.action = "/admin/delete_product/" + (card.dataset.id || "");
+      document.body.appendChild(f);
+      f.submit();
+    };
+
+    open();
+  });
+
+   if (closeBtn) closeBtn.addEventListener("click", () => { // ✅ NEW (reset ham qilsin)
+    resetDeleteState(); // ✅ NEW
+    close();
+  });
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      resetDeleteState(); // ✅ NEW
+      close();
+    };
+  });
+
+  // ✅ NEW: "current slide"ni delete qilish
+  if (imgDeleteBtn) {
+    imgDeleteBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const editCarousel = modal.querySelector(".carousel"); // modal ichidagi carousel
+      if (!editCarousel) return;
+
+      const track = editCarousel.querySelector(".carousel-track");
+      if (!track) return;
+
+      const slides = Array.from(track.children);
+      if (!slides.length) return;
+
+      const idx = __carouselGetIndex(editCarousel); // hozirgi index
+      const current = slides[idx];
+      if (!current) return;
+
+      const filename = current.dataset.filename; // ✅ NEW
+      if (filename) {
+        deletedImages.push(filename);
+        if (deleteImagesInput) {
+          deleteImagesInput.value = JSON.stringify(deletedImages);
         }
-      };
+      }
 
-      modal.classList.add('open');
+      current.remove();
+
+      // o‘chirgandan keyin indexni to‘g‘rilaymiz
+      const afterLen = track.children.length;
+      if (!afterLen) {
+        __carouselReset(editCarousel);
+        return;
+      }
+
+      const newIndex = idx >= afterLen ? afterLen - 1 : idx;
+      __carouselGo(editCarousel, newIndex);
     });
-  });
-
-  document.getElementById('editClose').onclick =
-    () => modal.classList.remove('open');
-
-  modal.addEventListener('click', (e)=>{
-    if(e.target === modal) modal.classList.remove('open');
-  });
+  }
 
 })();
 
 
+// ---------------- Size filter modal ----------------
+(() => {
+  const form = document.getElementById("get-form");
+  const hiddenBox = document.getElementById("sizeHiddenBox");
+  const applyBtn = document.getElementById("applySizes");
+  const clearBtn = document.getElementById("clearSizes");
+  const sizeModal = document.getElementById("sizeModal");
 
+  if (!form || !hiddenBox || !applyBtn || !clearBtn) return;
 
-
-(function(){
-  const form = document.getElementById('get-form'); // agar aniq id bo'lsa: document.getElementById('FILTER_FORM_ID')
-  const hiddenBox = document.getElementById('sizeHiddenBox');
-
-  function rebuildHiddenSizes(){
-    hiddenBox.innerHTML = '';
-    document.querySelectorAll('.sizeCheck:checked').forEach(ch=>{
-      const inp = document.createElement('input');
-      inp.type = 'hidden';
-      inp.name = 'size';   // <<< backend getlist('size')
+  const rebuildHiddenSizes = () => {
+    hiddenBox.innerHTML = "";
+    document.querySelectorAll(".sizeCheck:checked").forEach((ch) => {
+      const inp = document.createElement("input");
+      inp.type = "hidden";
+      inp.name = "size";
       inp.value = ch.value;
       hiddenBox.appendChild(inp);
     });
-  }
+  };
 
-  // modal open/close (agar sendagi modal tizimi bo'lsa, buni olib tashlasa ham bo'ladi)
-  document.querySelectorAll('[data-open]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const m = document.querySelector(btn.getAttribute('data-open'));
-      if(m) m.classList.add('open');
+  // generic open/close (faqat shu blokka kerak bo‘lsa)
+  document.addEventListener("click", (e) => {
+    const openBtn = e.target.closest("[data-open]");
+    if (openBtn) {
+      const m = document.querySelector(openBtn.getAttribute("data-open"));
+      if (m) m.classList.add("open");
+      return;
+    }
+
+    const closeBtn = e.target.closest("[data-close]");
+    if (closeBtn) {
+      closeBtn.closest(".modal")?.classList.remove("open");
+    }
+  });
+
+  document.querySelectorAll(".modal").forEach((m) => {
+    m.addEventListener("click", (e) => {
+      if (e.target === m) m.classList.remove("open");
     });
   });
-  document.querySelectorAll('[data-close]').forEach(btn=>{
-    btn.addEventListener('click', ()=> btn.closest('.modal')?.classList.remove('open'));
-  });
-  document.querySelectorAll('.modal').forEach(m=>{
-    m.addEventListener('click', (e)=>{ if(e.target === m) m.classList.remove('open'); });
-  });
 
-  document.getElementById('applySizes').addEventListener('click', ()=>{
+  applyBtn.addEventListener("click", () => {
     rebuildHiddenSizes();
-    document.getElementById('sizeModal').classList.remove('open');
+    if (sizeModal) sizeModal.classList.remove("open");
     form.submit();
   });
 
-  document.getElementById('clearSizes').addEventListener('click', ()=>{
-    document.querySelectorAll('.sizeCheck').forEach(ch=> ch.checked = false);
+  clearBtn.addEventListener("click", () => {
+    document.querySelectorAll(".sizeCheck").forEach((ch) => (ch.checked = false));
     rebuildHiddenSizes();
   });
 
-  // reload bo'lganda ham hiddenlar sync bo'lsin:
   rebuildHiddenSizes();
 })();
+
+
+ // ----------- Carousel ----------------------
+
+// ----------- Carousel ----------------------
+document.querySelectorAll(".carousel").forEach((carousel) => {
+  const track = carousel.querySelector(".carousel-track");
+  if (!track) return;
+
+  // ✅ NEW: har carousel uchun index init
+  __carouselIndex.set(carousel, 0); // ✅ NEW
+
+  carousel.querySelector(".next").onclick = (e) => { // ✅ NEW: e qo‘shdik
+    e.preventDefault();         // ✅ NEW
+    e.stopPropagation();        // ✅ NEW (modal yopilib ketmasin)
+    const slides = track.children;
+    if (!slides.length) return;
+
+    const idx = __carouselGetIndex(carousel);
+    __carouselGo(carousel, idx + 1); // ✅ NEW (index state bilan)
+  };
+
+  carousel.querySelector(".prev").onclick = (e) => { // ✅ NEW: e qo‘shdik
+    e.preventDefault();         // ✅ NEW
+    e.stopPropagation();        // ✅ NEW
+    const slides = track.children;
+    if (!slides.length) return;
+
+    const idx = __carouselGetIndex(carousel);
+    __carouselGo(carousel, idx - 1); // ✅ NEW
+  };
+});

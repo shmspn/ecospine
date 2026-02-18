@@ -14,7 +14,7 @@
 
   <div class="row-2">
     <input type="text" name="description" placeholder="description">
-    <input class="file" type="file" name="image" >
+    <input class="file" type="file" name="images" multiple>
     <div style="display: flex; gap: 10px; width: 100%;">
         <input type="number" name="discount_percent" min="0" max="90" value="0" style="width: 50%; display: block;">
         <button style="width: 50%; display: block;" type="submit">Qo'shish</button>
@@ -98,18 +98,19 @@
         <td>{{ loop.index }}</td>
 
         <td>
-          {% if product.image %}
-            <img src="{{ url_for('static', filename='uploads/' ~ product.image) }}" 
-                 class="admin-product-img card"
+          {% if product.images %}
+          <img src="{{ url_for('static', filename='uploads/' ~ product.images[0].filename) }}" 
+               class="admin-product-img card"
 
-                 data-id="{{ product.id }}"
-                 data-title="{{ product.title }}"
-                 data-size="{{ product.size }}"
-                 data-price="{{ product.price | int}}"
-                 data-discount="{{ product.discount_percent or 0 }}"
-                 data-description="{{ product.description or '' }}"
-                 data-image="{{ product.image }}"
-            >
+               data-id="{{ product.id }}"
+               data-title="{{ product.title }}"
+               data-size="{{ product.size }}"
+               data-price="{{ product.price | int}}"
+               data-discount="{{ product.discount_percent or 0 }}"
+               data-description="{{ product.description or '' }}"
+
+               data-images='{{ (product.images | map(attribute="filename") | list) | tojson }}'
+          >
           {% endif %}
         </td>
 
@@ -122,7 +123,7 @@
             data-price="{{ product.price | int}}"
             data-discount="{{ product.discount_percent or 0 }}"
             data-description="{{ product.description or '' }}"
-            data-image="{{ product.image }}"
+            data-images='{{ (product.images | map(attribute="filename") | list) | tojson }}'
         >
           <p>{{ product.title }}</p>
         </td>
@@ -132,11 +133,6 @@
 
         <td style="text-align: center; ">
           <span style="display: block" class="badge">{{ product.discount_percent }}</span>
-          <!-- <form action="{{ url_for('admin.set_discount', product_id=product.id) }}" method="post" style="display:flex; gap:10px;">
-            <input type="number" name="discount_percent" min="0" max="90"
-                   value="{{ product.discount_percent or 0 }}" style="width:60px;">
-            <button class="table-btn" type="submit">Set</button>
-          </form> -->
         </td>
         <td>
           <form action="{{ url_for('admin.toggle_product', product_id=product.id) }}" method="post" style="display:inline;">
@@ -171,30 +167,41 @@
       <form method="post" id="editForm" enctype="multipart/form-data">
         <div class="modal-body edit">
 
-          <div style="display: flex; gap: 15px; align-items: end;">
-            <img id="editPreview" class="edit-preview">
+          <div class="wrap-carousel">
+            <div class="carousel">
+              <div class="carousel-track" id="carousel-images"></div>
+              <button type="button" class="prev">‹</button>
+              <button type="button" class="delete-img" id="imgDeleteBtn">Delete this photo</button>
+              <input type="hidden" name="delete_images" id="deleteImages" value="[]">
+              <button type="button" class="next">›</button>
+            </div>
 
-            <div style="width: 100%;">
-              <input type="text" name="size" id="editSize" placeholder="Size">
-              <input type="number" name="price" id="editPrice" placeholder="Price">
+            <div class="wrap-content">
+              <input type="text" name="title" id="editTitle" placeholder="Title">
+
+              <div class="wrap-title">
+                <input type="text" name="size" id="editSize" placeholder="Size">
+                <input type="number" name="price" id="editPrice" placeholder="Price">
+              </div>
+  
+  
+              <input type="hidden" name="product_id" id="editId">
+    
+    
+              <div class="wrap-image">
+                <input  type="file" name="images" multiple id="editImageInput" accept="image/*">
+                
+                <input type="number" name="discount_percent" id="editDiscount" placeholder="Discount %">
+              </div>
             </div>
           </div>
           
-          <input type="hidden" name="product_id" id="editId">
 
-          <input type="text" name="title" id="editTitle" placeholder="Title">
-
-          <div style="display: flex; gap: 15px;">
-            <input style="width: 70%;" type="file" name="image" id="editImageInput" accept="image/*">
-            
-            <input style="width: 30%;" type="number" name="discount_percent" id="editDiscount" placeholder="Discount %">
-          </div>
-
-          <textarea name="description" rows="10" id="editDescription" placeholder="Description"></textarea>
+          <textarea name="description" rows="5" id="editDescription" placeholder="Description"></textarea>
   
           <div class="modal-actions">
-            <button type="submit">Saqlash</button>
             <button type="button" class="danger" id="deleteBtn">Delete</button>
+            <button type="submit">Saqlash</button>
           </div>
 
         </div>

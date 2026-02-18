@@ -11,11 +11,18 @@ class Product(db.Model):
     price = db.Column(db.Integer, nullable=False, default=0)
     size = db.Column(db.String(20), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    image = db.Column(db.String(255))
+    # image = db.Column(db.String(255))
     discount_percent = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+    images = db.relationship(
+        "ProductImage",
+        back_populates="product",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
 
     @hybrid_property
     def final_price(self):
@@ -29,3 +36,6 @@ class Product(db.Model):
         # integer natija chiqishi uchun cast
         return cast(cls.price * (100 - d) / 100, Integer)
     
+
+
+

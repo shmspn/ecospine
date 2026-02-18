@@ -67,7 +67,8 @@ def index():
 
     return render_template('main/home.html', products=products, sizes=sizes, selected_sizes=selected_sizes)
 
-@home_bp.get("/products/<int:product_id>")
-def product_detail(product_id):
-    product = Product.query.get_or_404(product_id)
-    return render_template("main/product_detail.html", product=product)
+
+# @home_bp.get("/products/<int:product_id>")
+# def product_detail(product_id):
+#     product = Product.query.get_or_404(product_id)
+#     return render_template("main/product_detail.html", product=product)

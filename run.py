@@ -1,7 +1,10 @@
 from app import create_app
 from app.extentions import db
+from flask_migrate import Migrate
 
 app = create_app()
+
+migrate = Migrate(app, db)
 
 with app.app_context():
     db.create_all()
