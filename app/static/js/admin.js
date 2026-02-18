@@ -1,21 +1,42 @@
 
+// Modal helper: generic open/close/click-outside handling
+const __createModalManager = (modalId, options = {}) => {
+  const modal = document.getElementById(modalId);
+  if (!modal) return null;
 
-// ---------------- Desc modal ----------------
+  const open = () => modal.classList.add("open");
+  const close = () => modal.classList.remove("open");
+  const toggle = () => modal.classList.toggle("open");
+
+  // Click outside to close
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) close();
+  });
+
+  // Escape key to close
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("open")) close();
+  });
+
+  return { modal, open, close, toggle };
+};
+
+// Desc modal setup
 (() => {
-  const modal = document.getElementById("descModal");
+  const mgr = __createModalManager("descModal");
+  if (!mgr) return;
+
   const body = document.getElementById("modalBody");
   const title = document.getElementById("modalTitle");
   const closeBtn = document.getElementById("modalClose");
 
-  if (!modal || !body || !title || !closeBtn) return;
+  if (!body || !title || !closeBtn) return;
 
   const openModal = (t, text) => {
     title.textContent = t || "Description";
     body.textContent = text || "";
-    modal.classList.add("open");
+    mgr.open();
   };
-
-  const closeModal = () => modal.classList.remove("open");
 
   document.addEventListener("click", (e) => {
     const el = e.target.closest(".desc-text");
@@ -23,21 +44,13 @@
     openModal(el.dataset.title, el.dataset.desc);
   });
 
-  closeBtn.addEventListener("click", closeModal);
-
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) closeModal();
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModal();
-  });
+  closeBtn.addEventListener("click", mgr.close);
 })();
 
 
-// ✅ NEW: Carousel index state (har carousel uchun alohida index saqlaymiz)
-const __carouselIndex = new WeakMap(); // ✅ NEW
-const __carouselGo = (carousel, newIndex) => { // ✅ NEW
+// Carousel index state
+const __carouselIndex = new WeakMap();
+const __carouselGo = (carousel, newIndex) => {
   const track = carousel.querySelector(".carousel-track");
   if (!track) return;
   const slides = track.children;
@@ -50,15 +63,15 @@ const __carouselGo = (carousel, newIndex) => { // ✅ NEW
   __carouselIndex.set(carousel, idx);
   track.style.transform = `translateX(-${idx * 100}%)`;
 };
-const __carouselGetIndex = (carousel) => __carouselIndex.get(carousel) ?? 0; // ✅ NEW
-const __carouselReset = (carousel) => __carouselGo(carousel, 0); // ✅ NEW
+const __carouselGetIndex = (carousel) => __carouselIndex.get(carousel) ?? 0;
+const __carouselReset = (carousel) => __carouselGo(carousel, 0);
 
 
 // ---------------- Edit modal (admin update) ----------------
 (() => {
   const modal = document.getElementById("editModal");
   const form = document.getElementById("editForm");
-  const deleteBtn = document.getElementById("deleteBtn"); // siz comment qilgansiz
+  const deleteBtn = document.getElementById("deleteBtn");
   const idEl = document.getElementById("editId");
   const titleEl = document.getElementById("editTitle");
   const sizeEl = document.getElementById("editSize");
@@ -71,20 +84,16 @@ const __carouselReset = (carousel) => __carouselGo(carousel, 0); // ✅ NEW
 
   const closeBtn = document.getElementById("editClose");
 
-    // ✅ NEW: delete tugma + hidden input
-  const imgDeleteBtn = document.getElementById("imgDeleteBtn"); // ✅ NEW (HTML’da qo‘ying)
-  const deleteImagesInput = document.getElementById("deleteImages"); // ✅ NEW (hidden input)
-  let deletedImages = []; // ✅ NEW (state)
+  const imgDeleteBtn = document.getElementById("imgDeleteBtn");
+  const deleteImagesInput = document.getElementById("deleteImages");
+  let deletedImages = [];
 
-  const open = () => modal.classList.add("open");
-  const close = () => modal.classList.remove("open");
-
-    const resetDeleteState = () => { // ✅ NEW
+  const resetDeleteState = () => {
     deletedImages = [];
     if (deleteImagesInput) deleteImagesInput.value = "[]";
   };
 
-  // ✅ event delegation: bitta click listener
+  // Event delegation for card clicks
   document.addEventListener("click", (e) => {
     const card = e.target.closest(".card");
     if (!card) return;
@@ -99,11 +108,9 @@ const __carouselReset = (carousel) => __carouselGo(carousel, 0); // ✅ NEW
     descEl.value = card.dataset.description || "";
 
     if (imageInput) imageInput.value = "";
+    resetDeleteState();
 
-     // ✅ NEW: modal ochilganda delete state reset
-    resetDeleteState(); // ✅ NEW
-
-    // rasmlar
+    // Images
     if (imagesEl) {
       let images = [];
       try {
@@ -117,13 +124,12 @@ const __carouselReset = (carousel) => __carouselGo(carousel, 0); // ✅ NEW
         const img = document.createElement("img");
         img.src = `/static/uploads/${fn}`;
         img.alt = "";
-        img.dataset.filename = fn; // ✅ NEW (delete uchun kerak)
+        img.dataset.filename = fn;
         imagesEl.appendChild(img);
       });
 
-      // ✅ NEW: modal ochilganda carousel index 0 ga qaytsin
-      const editCarousel = modal.querySelector(".carousel"); // ✅ NEW
-      if (editCarousel) __carouselReset(editCarousel); // ✅ NEW
+      const editCarousel = modal.querySelector(".carousel");
+      if (editCarousel) __carouselReset(editCarousel);
     }
 
     form.action = "/admin/update_product";
@@ -137,28 +143,28 @@ const __carouselReset = (carousel) => __carouselGo(carousel, 0); // ✅ NEW
       f.submit();
     };
 
-    open();
+    modal.classList.add("open");
   });
 
-   if (closeBtn) closeBtn.addEventListener("click", () => { // ✅ NEW (reset ham qilsin)
-    resetDeleteState(); // ✅ NEW
-    close();
+  if (closeBtn) closeBtn.addEventListener("click", () => {
+    resetDeleteState();
+    modal.classList.remove("open");
   });
 
   modal.addEventListener("click", (e) => {
     if (e.target === modal) {
-      resetDeleteState(); // ✅ NEW
-      close();
-    };
+      resetDeleteState();
+      modal.classList.remove("open");
+    }
   });
 
-  // ✅ NEW: "current slide"ni delete qilish
+  // Delete current slide
   if (imgDeleteBtn) {
     imgDeleteBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
 
-      const editCarousel = modal.querySelector(".carousel"); // modal ichidagi carousel
+      const editCarousel = modal.querySelector(".carousel");
       if (!editCarousel) return;
 
       const track = editCarousel.querySelector(".carousel-track");
@@ -167,11 +173,11 @@ const __carouselReset = (carousel) => __carouselGo(carousel, 0); // ✅ NEW
       const slides = Array.from(track.children);
       if (!slides.length) return;
 
-      const idx = __carouselGetIndex(editCarousel); // hozirgi index
+      const idx = __carouselGetIndex(editCarousel);
       const current = slides[idx];
       if (!current) return;
 
-      const filename = current.dataset.filename; // ✅ NEW
+      const filename = current.dataset.filename;
       if (filename) {
         deletedImages.push(filename);
         if (deleteImagesInput) {
@@ -181,7 +187,7 @@ const __carouselReset = (carousel) => __carouselGo(carousel, 0); // ✅ NEW
 
       current.remove();
 
-      // o‘chirgandan keyin indexni to‘g‘rilaymiz
+
       const afterLen = track.children.length;
       if (!afterLen) {
         __carouselReset(editCarousel);
@@ -253,33 +259,31 @@ const __carouselReset = (carousel) => __carouselGo(carousel, 0); // ✅ NEW
 })();
 
 
- // ----------- Carousel ----------------------
 
 // ----------- Carousel ----------------------
 document.querySelectorAll(".carousel").forEach((carousel) => {
   const track = carousel.querySelector(".carousel-track");
   if (!track) return;
 
-  // ✅ NEW: har carousel uchun index init
-  __carouselIndex.set(carousel, 0); // ✅ NEW
+  __carouselIndex.set(carousel, 0);
 
-  carousel.querySelector(".next").onclick = (e) => { // ✅ NEW: e qo‘shdik
-    e.preventDefault();         // ✅ NEW
-    e.stopPropagation();        // ✅ NEW (modal yopilib ketmasin)
+  carousel.querySelector(".next").onclick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const slides = track.children;
     if (!slides.length) return;
 
     const idx = __carouselGetIndex(carousel);
-    __carouselGo(carousel, idx + 1); // ✅ NEW (index state bilan)
+    __carouselGo(carousel, idx + 1);
   };
 
-  carousel.querySelector(".prev").onclick = (e) => { // ✅ NEW: e qo‘shdik
-    e.preventDefault();         // ✅ NEW
-    e.stopPropagation();        // ✅ NEW
+  carousel.querySelector(".prev").onclick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const slides = track.children;
     if (!slides.length) return;
 
     const idx = __carouselGetIndex(carousel);
-    __carouselGo(carousel, idx - 1); // ✅ NEW
+    __carouselGo(carousel, idx - 1);
   };
 });

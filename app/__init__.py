@@ -1,6 +1,6 @@
 from flask import Flask
 from config import Config
-from app.extentions import db
+from app.extensions import db
 import os
 
 def create_app():
@@ -24,7 +24,7 @@ def create_app():
     def uzs(value):
         try:
             return f"{int(value):,}".replace(",", " ")
-        except Exception:
+        except (ValueError, TypeError):
             return value
 
     return app

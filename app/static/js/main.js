@@ -193,7 +193,6 @@ function attachMoneyFormatter(el){
       sizeEl.textContent  = size;
       descEl.textContent  = desc;
 
-      console.log(imagesEl)
       imagesEl.innerHTML = '';
       images.forEach(im => {
         img = document.createElement('img')

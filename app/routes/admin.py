@@ -8,12 +8,53 @@ from flask import (
     render_template,
     current_app
 )
-from werkzeug.utils import save_upload
+from werkzeug.utils import secure_filename
+from uuid import uuid4
 from app.models import User, Product, Settings, ProductImage
-from app.extentions import db
+from app.extensions import db
+from app.utils import get_sizes
 from functools import wraps
 from sqlalchemy import or_
 import json, os
+
+# Allowed image extensions
+ALLOWED_IMAGE_EXTS = {"png", "jpg", "jpeg", "gif", "webp", "avif"}
+
+
+def save_image(file_storage):
+    """Validate and save an uploaded image, return the saved filename.
+
+    Raises ValueError on invalid files.
+    """
+    if not file_storage or not getattr(file_storage, "filename", None):
+        raise ValueError("No file")
+
+    filename = secure_filename(file_storage.filename)
+    if "." not in filename:
+        raise ValueError("Missing extension")
+
+    ext = filename.rsplit('.', 1)[1].lower()
+    if ext not in ALLOWED_IMAGE_EXTS:
+        raise ValueError("Invalid extension")
+
+    # Basic MIME check
+    mimetype = getattr(file_storage, "mimetype", "") or file_storage.content_type or ""
+    if not mimetype.startswith("image/"):
+        raise ValueError("Invalid mime type")
+
+    upload_dir = current_app.config.get("UPLOAD_FOLDER")
+    if not upload_dir:
+        raise ValueError("Upload folder not configured")
+
+    os.makedirs(upload_dir, exist_ok=True)
+
+    unique_name = f"{uuid4().hex}.{ext}"
+    dest_path = os.path.join(upload_dir, unique_name)
+
+    # Save file to disk
+    file_storage.save(dest_path)
+
+    return unique_name
 
 
 admin_bp = Blueprint('admin', __name__)
@@ -102,11 +143,7 @@ def settings():
 @moderator_required
 def admin_panel():
     
-    sizes = [
-        (r[0] or "").strip()
-        for r in db.session.query(Product.size).distinct().order_by(Product.size).all()
-        if (r[0] or "").strip()
-    ]
+    sizes = get_sizes(Product)
 
     products = Product.query.order_by(Product.id.desc()).all()
     return render_template('admin/admin_panel.html', page='products', products=products, sizes=sizes)
@@ -128,6 +165,8 @@ def add_users():
 
         flash('Create user', 'success')
         return redirect(url_for('admin.users'))
+    # For GET requests, show the users page (the form is in the admin panel template)
+    return redirect(url_for('admin.users'))
     
 
 
@@ -196,13 +235,9 @@ def products():
     else:
         query = query.order_by(Product.id.desc())
 
-    products = query.order_by(Product.id.desc()).all()
+    products = query.all()
 
-    sizes = [
-        (r[0] or "").strip()
-        for r in db.session.query(Product.size).distinct().order_by(Product.size).all()
-        if (r[0] or "").strip()
-    ]
+    sizes = get_sizes(Product)
    
     return render_template(
         "admin/admin_panel.html",
@@ -246,7 +281,10 @@ def update_product():
 
     for img in images:
         if img and img.filename:
-            filename = save_upload(img, current_app.config["UPLOAD_FOLDER"])
+            try:
+                filename = save_image(img)
+            except ValueError:
+                continue
             db.session.add(ProductImage(
                 product_id=product.id,
                 filename=filename,
@@ -319,7 +357,11 @@ def add_product():
 
         for i, img in enumerate(images):
             if img and img.filename:
-                filename = save_upload(img, current_app.config["UPLOAD_FOLDER"])
+                try:
+                    filename = save_image(img)
+                except ValueError:
+                    # skip invalid uploads
+                    continue
                 db.session.add(ProductImage(
                     product_id=product.id,
                     filename=filename,
@@ -330,8 +372,8 @@ def add_product():
 
         flash('Product added successfully', 'success')
         return redirect(url_for('admin.products'))
-    
-
+    # For GET requests, show the products page (the form is in the admin panel template)
+    return redirect(url_for('admin.products'))
     
 @admin_bp.route('/products/<int:product_id>/discount', methods=['POST'])
 @moderator_required

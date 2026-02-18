@@ -1,4 +1,4 @@
-from app.extentions import db
+from app.extensions import db
 from datetime import datetime
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import case, cast, Integer

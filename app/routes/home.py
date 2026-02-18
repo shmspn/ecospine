@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request
 from app.models import Product, Settings
 from sqlalchemy import or_
-from app.extentions import db
+from app.extensions import db
+from app.utils import get_sizes
 
 home_bp = Blueprint('home', __name__)
 
@@ -59,11 +60,7 @@ def index():
 
     products = query.all()
 
-    sizes = [
-        (r[0] or "").strip()
-        for r in db.session.query(Product.size).distinct().order_by(Product.size).all()
-        if (r[0] or "").strip()
-    ]
+    sizes = get_sizes(Product)
 
     return render_template('main/home.html', products=products, sizes=sizes, selected_sizes=selected_sizes)
 
