@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Instance folder (SQLite DB, secrets)
+instance/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (optional — include if you want to track them)
+# app/static/uploads/
+
+# Byte-compiled / optimized
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+.env
+.flaskenv

@@ -1,71 +1,26 @@
 from flask import Blueprint, render_template, request
-from app.models import Product, Settings
-from sqlalchemy import or_
-from app.extensions import db
-from app.utils import get_sizes
+from app.models import Product
+from app.utils import get_sizes, apply_product_filters
 
 home_bp = Blueprint('home', __name__)
 
+PER_PAGE = 20
+
 @home_bp.route('/', methods=['GET'])
 def index():
-    q = (request.args.get("q") or "").strip()
-    sort = request.args.get("sort") or "new"
-
-    # price range
-    min_price = (request.args.get("min_price") or "").strip()
-    max_price = (request.args.get("max_price") or "").strip()
-
-    # multi size
-    selected_sizes = [s.strip() for s in request.args.getlist("sizes") if s.strip()]
+    page = request.args.get("page", 1, type=int)
 
     query = Product.query.filter(Product.is_active.is_(True))
+    query, selected_sizes = apply_product_filters(query, request.args, use_final_price=True)
 
-    # search
-    if q:
-        like = f"%{q}%"
-        query = query.filter(or_(
-            Product.title.ilike(like),
-            Product.description.ilike(like),
-            Product.size.ilike(like),
-        ))
-    
-    # sizes (multi)
-    if selected_sizes:
-        query = query.filter(Product.size.in_(selected_sizes))
-
-
-
-    # Price filter (CHEGIRMALI NARX bo'yicha)
-    if min_price:
-        try:
-            query = query.filter(Product.final_price >= int(min_price))
-        except ValueError:
-            pass
-
-    if max_price:
-        try:
-            query = query.filter(Product.final_price <= int(max_price))
-        except ValueError:
-            pass
-    
-    # Sort ham final_price bo'yicha
-    if sort == "price_asc":
-        query = query.order_by(Product.final_price.asc())
-    elif sort == "price_desc":
-        query = query.order_by(Product.final_price.desc())
-    elif sort == "discount_desc":
-        query = query.order_by(Product.discount_percent.desc())
-    else:
-        query = query.order_by(Product.id.desc())
-
-    products = query.all()
+    pagination = query.paginate(page=page, per_page=PER_PAGE, error_out=False)
 
     sizes = get_sizes(Product)
 
-    return render_template('main/home.html', products=products, sizes=sizes, selected_sizes=selected_sizes)
-
-
-# @home_bp.get("/products/<int:product_id>")
-# def product_detail(product_id):
-#     product = Product.query.get_or_404(product_id)
-#     return render_template("main/product_detail.html", product=product)
+    return render_template(
+        'main/home.html',
+        products=pagination.items,
+        pagination=pagination,
+        sizes=sizes,
+        selected_sizes=selected_sizes,
+    )

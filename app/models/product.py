@@ -1,5 +1,5 @@
 from app.extensions import db
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import case, cast, Integer
 
@@ -15,7 +15,7 @@ class Product(db.Model):
     discount_percent = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     images = db.relationship(
         "ProductImage",
@@ -35,7 +35,4 @@ class Product(db.Model):
         d = case((cls.discount_percent.is_(None), 0), else_=cls.discount_percent)
         # integer natija chiqishi uchun cast
         return cast(cls.price * (100 - d) / 100, Integer)
-    
-
-
 

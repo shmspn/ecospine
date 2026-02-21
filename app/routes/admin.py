@@ -12,10 +12,11 @@ from werkzeug.utils import secure_filename
 from uuid import uuid4
 from app.models import User, Product, Settings, ProductImage
 from app.extensions import db
-from app.utils import get_sizes
+from app.utils import get_sizes, apply_product_filters
 from functools import wraps
-from sqlalchemy import or_
 import json, os
+
+PER_PAGE = 20
 
 # Allowed image extensions
 ALLOWED_IMAGE_EXTS = {"png", "jpg", "jpeg", "gif", "webp", "avif"}
@@ -142,20 +143,41 @@ def settings():
 @admin_bp.route('/')
 @moderator_required
 def admin_panel():
-    
+    page = request.args.get("page", 1, type=int)
     sizes = get_sizes(Product)
 
-    products = Product.query.order_by(Product.id.desc()).all()
-    return render_template('admin/admin_panel.html', page='products', products=products, sizes=sizes)
+    query = Product.query
+    query, selected_sizes = apply_product_filters(query, request.args)
+    pagination = query.paginate(page=page, per_page=PER_PAGE, error_out=False)
+
+    return render_template(
+        'admin/admin_panel.html',
+        page='products',
+        products=pagination.items,
+        pagination=pagination,
+        sizes=sizes,
+        selected_sizes=selected_sizes,
+    )
 
 
 @admin_bp.route('/add_users', methods=['GET', 'POST'])
 @admin_required
 def add_users():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        role = request.form['role']
+        username = (request.form.get('username') or '').strip()
+        password = (request.form.get('password') or '').strip()
+        role = request.form.get('role', 'moderator')
+
+        # Validation
+        if not username or len(username) < 3:
+            flash("Username kamida 3 ta belgi bo'lishi kerak", 'warning')
+            return redirect(url_for('admin.users'))
+        if not password or len(password) < 4:
+            flash("Parol kamida 4 ta belgi bo'lishi kerak", 'warning')
+            return redirect(url_for('admin.users'))
+        if User.query.filter_by(username=username).first():
+            flash("Bu username allaqachon mavjud", 'warning')
+            return redirect(url_for('admin.users'))
 
         user = User(username=username, role=role)
         user.set_password(password)
@@ -163,9 +185,8 @@ def add_users():
         db.session.add(user)
         db.session.commit()
 
-        flash('Create user', 'success')
+        flash('Foydalanuvchi yaratildi', 'success')
         return redirect(url_for('admin.users'))
-    # For GET requests, show the users page (the form is in the admin panel template)
     return redirect(url_for('admin.users'))
     
 
@@ -189,75 +210,38 @@ def delete_user(user_id):
 
 
 @admin_bp.route("/products", methods=["GET"])
+@moderator_required
 def products():
-    q = (request.args.get("q") or "").strip()
-    discount = request.args.get("discount")  # "1" bo'ladi
-    min_price = request.args.get("min_price")
-    max_price = request.args.get("max_price")
-    sort = request.args.get("sort") or "new"
-
-    selected_sizes = [s.strip() for s in request.args.getlist("size") if s and s.strip()]
+    page = request.args.get("page", 1, type=int)
 
     query = Product.query
-
-    if q:
-        like = f"%{q}%"
-        query = query.filter(or_(
-            Product.title.ilike(like),
-            Product.description.ilike(like),
-            Product.size.ilike(like),
-        ))
-
-    if selected_sizes:
-            query = query.filter(Product.size.in_(selected_sizes))
-
-    if discount == "1":
-        query = query.filter((Product.discount_percent or 0) > 0)
-
-    if min_price:
-        try:
-            query = query.filter(Product.price >= int(min_price))
-        except ValueError:
-            pass
-
-    if max_price:
-        try:
-            query = query.filter(Product.price <= int(max_price))
-        except ValueError:
-            pass
-
-    if sort == "price_asc":
-        query = query.order_by(Product.price.asc())
-    elif sort == "price_desc":
-        query = query.order_by(Product.price.desc())
-    elif sort == "discount_desc":
-        query = query.order_by(Product.discount_percent.desc())
-    else:
-        query = query.order_by(Product.id.desc())
-
-    products = query.all()
+    query, selected_sizes = apply_product_filters(query, request.args)
+    pagination = query.paginate(page=page, per_page=PER_PAGE, error_out=False)
 
     sizes = get_sizes(Product)
-   
+
     return render_template(
         "admin/admin_panel.html",
         page="products",
-        products=products,
-        sizes=sizes,  # <= MUHIM: template'ga uzatyapmiz   
+        products=pagination.items,
+        pagination=pagination,
+        sizes=sizes,
+        selected_sizes=selected_sizes,
     )
 
 
 
 @admin_bp.route("/update_product", methods=["POST"])
+@moderator_required
 def update_product():
     product_id = request.form.get("product_id")
     product = Product.query.get_or_404(product_id)
 
-    product.title = request.form.get("title")
-    product.size = request.form.get("size")
-    product.price = int(request.form.get("price") or 0)
-    product.discount_percent = int(request.form.get("discount_percent") or 0)
-    product.description = request.form.get("description")
+    product.title = (request.form.get("title") or "").strip()
+    product.size = (request.form.get("size") or "").strip()
+    product.price = max(0, int(request.form.get("price") or 0))
+    product.discount_percent = max(0, min(100, int(request.form.get("discount_percent") or 0)))
+    product.description = (request.form.get("description") or "").strip()
     images = request.files.getlist("images")
 
     # ✅ delete qilingan rasmlar ro'yxati
@@ -331,21 +315,31 @@ def delete_product(product_id):
 @moderator_required
 def add_product():
     if request.method == 'POST':
-        title = request.form.get('title')
-        price = request.form.get('price', type=int)
-        description = request.form.get('description')
-        size = request.form.get("size")
+        title = (request.form.get('title') or '').strip()
+        description = (request.form.get('description') or '').strip()
+        size = (request.form.get('size') or '').strip()
         images = request.files.getlist("images")
-        discount_percent = (request.form.get("discount_percent") or "").strip()
-        
+
         try:
-            d = int(discount_percent)
-        except ValueError:
+            price = max(0, int(request.form.get('price') or 0))
+        except (ValueError, TypeError):
+            price = 0
+
+        try:
+            d = max(0, min(100, int(request.form.get('discount_percent') or 0)))
+        except (ValueError, TypeError):
             d = 0
 
+        # Validation
+        if not title:
+            flash("Mahsulot nomi kiritilishi shart", 'warning')
+            return redirect(url_for('admin.products'))
+        if price <= 0:
+            flash("Narx musbat bo'lishi kerak", 'warning')
+            return redirect(url_for('admin.products'))
 
         product = Product(
-            title=title, 
+            title=title,
             price=price,
             size=size,
             description=description,
@@ -394,6 +388,7 @@ def set_discount(product_id):
 
 
 @admin_bp.route("/toggle_product/<int:product_id>", methods=["POST"])
+@moderator_required
 def toggle_product(product_id):
     product = Product.query.get_or_404(product_id)
     product.is_active = not bool(product.is_active)

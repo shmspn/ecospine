@@ -3,175 +3,192 @@
 
 {% block body %}
 
-  <div class="filters-row">
-    <!-- 1) Sort -->
-    <div class="sort-box">
-      {% set cur_sort = request.args.get('sort','new') %}
-      <select id="sortSelect">
-        <option value="new" {% if cur_sort=='new' %}selected{% endif %}>Yangi</option>
-        <option value="price_asc" {% if cur_sort=='price_asc' %}selected{% endif %}>Arzonroq</option>
-        <option value="price_desc" {% if cur_sort=='price_desc' %}selected{% endif %}>Qimmatroq</option>
-        <option value="discount_desc" {% if cur_sort=='discount_desc' %}selected{% endif %}>Chegirmali</option>
-      </select>
-    </div>
-
-    <!-- 2) Narx modal open -->
-    <button type="button" class="chip" data-open="#priceModal">
-      Narx
-      {% if request.args.get('min_price') or request.args.get('max_price') %}
-        <span class="dot"></span>
-      {% endif %}
-    </button>
-
-    <!-- 3) Razmer modal open -->
-    <button type="button" class="chip" data-open="#sizeModal">
-      Razmer
-      {% if selected_sizes %}
-        <span class="dot"></span>
-      {% endif %}
-    </button>
-
-    <!-- 4) Reset: bosilishi bilan qo‘llanadi -->
-    <a class="chip reset" href="{{ url_for('home.index') }}">Barchasi</a>
+<div class="filters-row">
+  <!-- 1) Sort -->
+  <div class="sort-box">
+    {% set cur_sort = request.args.get('sort','new') %}
+    <select id="sortSelect">
+      <option value="new" {% if cur_sort=='new' %}selected{% endif %}>Yangi</option>
+      <option value="price_asc" {% if cur_sort=='price_asc' %}selected{% endif %}>Arzonroq</option>
+      <option value="price_desc" {% if cur_sort=='price_desc' %}selected{% endif %}>Qimmatroq</option>
+      <option value="discount_desc" {% if cur_sort=='discount_desc' %}selected{% endif %}>Chegirmali</option>
+    </select>
   </div>
 
-  <div class="section">
-    <h2>Matraslar katalogi</h2>
+  <!-- 2) Narx modal open -->
+  <button type="button" class="chip" data-open="#priceModal">
+    Narx
+    {% if request.args.get('min_price') or request.args.get('max_price') %}
+    <span class="dot"></span>
+    {% endif %}
+  </button>
 
-    <div class="products-grid">
+  <!-- 3) Razmer modal open -->
+  <button type="button" class="chip" data-open="#sizeModal">
+    Razmer
+    {% if selected_sizes %}
+    <span class="dot"></span>
+    {% endif %}
+  </button>
+
+  <!-- 4) Reset: bosilishi bilan qo‘llanadi -->
+  <a class="chip reset" href="{{ url_for('home.index') }}">Barchasi</a>
+</div>
+
+<div class="section">
+  <h2>Matraslar katalogi</h2>
+
+  <div class="products-grid">
     {% for product in products %}
-      <div class="product-card" href="#">
+    <div class="product-card" href="#">
 
-        <div class="img-wrap">
-          {% if product.discount_percent and product.discount_percent > 0 %}
-            <div class="badge-discount">-{{ product.discount_percent }}%</div>
-          {% endif %}
-          
-          <div class="carousel">
-            <a class="carousel-track"
-                data-title="{{ product.title }}"
-                data-size="{{ product.size }}"
-                data-description="{{ product.description }}"
-                data-price="{{ product.price | uzs }}"
-                data-final="{{ product.final_price | uzs }}"
-                data-discount="{{ product.discount_percent or 0 }}"
-                data-images='{{ (product.images | map(attribute="filename") | list) | tojson }}'
-                data-tg_user="saidkhans">
-              {% for img in product.images %}
-                <img src="{{ url_for('static', filename='uploads/' ~ img.filename) }}">
-              {% endfor %}
-            </a>
-            <button class="prev">‹</button>
-            <button class="next">›</button>
-          </div>
-          <div class="img-fallback">No image</div>
-        </div>
+      <div class="img-wrap">
+        {% if product.discount_percent and product.discount_percent > 0 %}
+        <div class="badge-discount">-{{ product.discount_percent }}%</div>
+        {% endif %}
 
-        <div class="card-body">
-          <div class="title">{{ product.title }}</div>
-          <div class="meta">{{ product.size }}</div>
-          {% if product.discount_percent and product.discount_percent > 0 %}
-            <div class="price-row">
-              <span class="old-price">{{ product.price | uzs }} so‘m</span>
-              <span class="new-price">{{ product.final_price | uzs }} so‘m</span>
-            </div>
-          {% else %}
-            <div class="price-row">
-              <span class="new-price">{{ product.price | uzs }} so‘m</span>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    {% endfor %}
-    </div>
-  </div>
-
-  <!-- Modal windows section -->
- <div class="modal" id="priceModal">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="modal-title">Narx bo‘yicha</div>
-        <button type="button" class="x" data-close>✕</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="modal-grid">
-          <input type="text" id="minPrice" inputmode="numeric" placeholder="Dan" value="{{ request.args.get('min_price','') }}">
-          <input type="text" id="maxPrice" inputmode="numeric" placeholder="Gacha" value="{{ request.args.get('max_price','') }}">
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="ghost" data-close>Cancel</button>
-          <button type="button" id="applyPrice">Apply</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="sizeModal">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="modal-title">Razmer tanlang</div>
-        <button type="button" class="x" data-close>✕</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="sizes-list">
-          {% for s in sizes %}
-            {% set s_clean = (s or '')|string|trim %}
-            <label class="check">
-              <input type="checkbox" class="sizeCheck" value="{{ s_clean }}"
-                {% if s_clean in selected_sizes %}checked{% endif %}>
-              <span>{{ s_clean }}</span>
-            </label>
-          {% endfor %}
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="ghost" id="clearSizes">Clear</button>
-          <button type="button" id="applySizes">Apply</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <div class="modal" id="quickViewModal">
-    <div class="modal-card quick-view">
-      <div class="modal-head">
-        <div class="modal-title" id="qvTitle"></div>
-        <button type="button" class="x" id="qvClose">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="qv-grid">
-          <div class="qv-image-wrap">
-            <div class="carousel">
-              <div class="carousel-track" id="modal-images">
-              </div>
-              <button type="button" class="prev">‹</button>
-              <button type="button" class="next">›</button>
-            </div>
-            <div class="qv-info">
-              <div class="qv-size" id="qvSize"></div>
-
-              <div class="qv-prices">
-                <div class="old-price" id="qvOldPrice"></div>
-                <div class="new-price" id="qvNewPrice"></div>
-              </div>
-
-            </div>
-          </div>
-          <p style="margin: 0;" id="description"></p>
-          <a href="#" target="_blank" rel="noopener noreferrer" class="qv-action tg" id="qvTgLink">
-            <svg viewBox="0 0 24 24" width="22">
-                <path fill="rgb(0, 150, 255)"
-                d="M9.04 15.57l-.38 5.35c.54 0 .77-.23 1.05-.5l2.52-2.41 5.22 3.82c.96.53 1.64.25 1.9-.89l3.44-16.12h.01c.32-1.49-.54-2.07-1.47-1.72L1.7 9.7c-1.46.57-1.44 1.39-.25 1.76l5.3 1.66L19.02 6.1c.58-.35 1.11-.16.68.19"/>
-            </svg>
-            Ushbu mahsulot haqida so'rash uchun
+        <div class="carousel">
+          <a class="carousel-track" data-title="{{ product.title }}" data-size="{{ product.size }}"
+            data-description="{{ product.description }}" data-price="{{ product.price | uzs }}"
+            data-final="{{ product.final_price | uzs }}" data-discount="{{ product.discount_percent or 0 }}"
+            data-images='{{ (product.images | map(attribute="filename") | list) | tojson }}' data-tg_user="saidkhans">
+            {% for img in product.images %}
+            <img src="{{ url_for('static', filename='uploads/' ~ img.filename) }}">
+            {% endfor %}
           </a>
+          <button class="prev">‹</button>
+          <button class="next">›</button>
         </div>
+        <div class="img-fallback">No image</div>
+      </div>
+
+      <div class="card-body">
+        <div class="title">{{ product.title }}</div>
+        <div class="meta">{{ product.size }}</div>
+        {% if product.discount_percent and product.discount_percent > 0 %}
+        <div class="price-row">
+          <span class="old-price">{{ product.price | uzs }} so‘m</span>
+          <span class="new-price">{{ product.final_price | uzs }} so‘m</span>
+        </div>
+        {% else %}
+        <div class="price-row">
+          <span class="new-price">{{ product.price | uzs }} so‘m</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if pagination and pagination.pages > 1 %}
+  <nav class="pagination">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('home.index', page=pagination.prev_num, **request.args) }}" class="page-btn">‹ Oldingi</a>
+    {% endif %}
+
+    {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+    {% if p %}
+    <a href="{{ url_for('home.index', page=p, **request.args) }}"
+      class="page-btn {% if p == pagination.page %}active{% endif %}">{{ p }}</a>
+    {% else %}
+    <span class="page-ellipsis">…</span>
+    {% endif %}
+    {% endfor %}
+
+    {% if pagination.has_next %}
+    <a href="{{ url_for('home.index', page=pagination.next_num, **request.args) }}" class="page-btn">Keyingi ›</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+</div>
+
+<!-- Modal windows section -->
+<div class="modal" id="priceModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Narx bo‘yicha</div>
+      <button type="button" class="x" data-close>✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-grid">
+        <input type="text" id="minPrice" inputmode="numeric" placeholder="Dan"
+          value="{{ request.args.get('min_price','') }}">
+        <input type="text" id="maxPrice" inputmode="numeric" placeholder="Gacha"
+          value="{{ request.args.get('max_price','') }}">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="ghost" data-close>Cancel</button>
+        <button type="button" id="applyPrice">Apply</button>
       </div>
     </div>
   </div>
+</div>
+
+<div class="modal" id="sizeModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Razmer tanlang</div>
+      <button type="button" class="x" data-close>✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="sizes-list">
+        {% for s in sizes %}
+        {% set s_clean = (s or '')|string|trim %}
+        <label class="check">
+          <input type="checkbox" class="sizeCheck" value="{{ s_clean }}" {% if s_clean in selected_sizes %}checked{%
+            endif %}>
+          <span>{{ s_clean }}</span>
+        </label>
+        {% endfor %}
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="ghost" id="clearSizes">Clear</button>
+        <button type="button" id="applySizes">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal" id="quickViewModal">
+  <div class="modal-card quick-view">
+    <div class="modal-head">
+      <div class="modal-title" id="qvTitle"></div>
+      <button type="button" class="x" id="qvClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="qv-grid">
+        <div class="qv-image-wrap">
+          <div class="carousel">
+            <div class="carousel-track" id="modal-images">
+            </div>
+            <button type="button" class="prev">‹</button>
+            <button type="button" class="next">›</button>
+          </div>
+          <div class="qv-info">
+            <div class="qv-size" id="qvSize"></div>
+
+            <div class="qv-prices">
+              <div class="old-price" id="qvOldPrice"></div>
+              <div class="new-price" id="qvNewPrice"></div>
+            </div>
+
+          </div>
+        </div>
+        <p style="margin: 0;" id="description"></p>
+        <a href="#" target="_blank" rel="noopener noreferrer" class="qv-action tg" id="qvTgLink">
+          <svg viewBox="0 0 24 24" width="22">
+            <path fill="rgb(0, 150, 255)"
+              d="M9.04 15.57l-.38 5.35c.54 0 .77-.23 1.05-.5l2.52-2.41 5.22 3.82c.96.53 1.64.25 1.9-.89l3.44-16.12h.01c.32-1.49-.54-2.07-1.47-1.72L1.7 9.7c-1.46.57-1.44 1.39-.25 1.76l5.3 1.66L19.02 6.1c.58-.35 1.11-.16.68.19" />
+          </svg>
+          Ushbu mahsulot haqida so'rash uchun
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
-

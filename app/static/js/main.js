@@ -1,3 +1,7 @@
+function resetCarousel(modal){
+  const track = modal.querySelector(".carousel-track");
+  if (track) track.style.transform = "translateX(0%)";
+}
 
 
 (function(){
@@ -10,9 +14,11 @@
   function openModal(sel){
     const m = document.querySelector(sel);
     if(m) m.classList.add('open');
+    
   }
   function closeModal(modal){
     modal.classList.remove('open');
+    resetCarousel(modal);
   }
 
   openBtns.forEach(btn=>{
@@ -30,11 +36,15 @@
     modal.addEventListener('click', (e)=>{
       if(e.target === modal) closeModal(modal);
     });
+    
   });
 
   document.addEventListener('keydown', (e)=>{
     if(e.key === 'Escape'){
-      document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open'));
+      document.querySelectorAll('.modal.open').forEach(m => {
+        m.classList.remove('open');
+        resetCarousel(modal);
+      });
     }
   });
 
@@ -178,7 +188,7 @@ function attachMoneyFormatter(el){
 
   document.querySelectorAll('.carousel-track').forEach(card=>{
     card.addEventListener('click', (e)=>{
-      e.preventDefault()
+      e.preventDefault();
 
       const title = card.dataset.title;
       const size  = card.dataset.size;
@@ -195,7 +205,7 @@ function attachMoneyFormatter(el){
 
       imagesEl.innerHTML = '';
       images.forEach(im => {
-        img = document.createElement('img')
+        const img = document.createElement('img')
         img.src = `/static/uploads/${im}`
         imagesEl.appendChild(img)
       })
@@ -216,15 +226,16 @@ function attachMoneyFormatter(el){
       `Narx: ${final}\n\n` ;
 
       tgLink.href = buildTgLink(tgUser, msg);
-
       modal.classList.add('open');
       globalTg.classList.add('close')
+      
     });
   });
 
   document.getElementById('qvClose').onclick = () => {
     modal.classList.remove('open')
     globalTg.classList.remove('close')
+    resetCarousel(modal);
   };
 
   modal.addEventListener('click', (e)=>{
@@ -234,23 +245,21 @@ function attachMoneyFormatter(el){
 })();
 
 
-
-
-
 // ----------- Carousel ----------------------
 
 document.querySelectorAll('.carousel').forEach(carousel => {
   const track = carousel.querySelector('.carousel-track');
   const slides = track.children;
-  let index = 0;
+  let index = 0
 
   carousel.querySelector('.next').onclick = () => {
     index = (index + 1) % slides.length;
     track.style.transform = `translateX(-${index * 100}%)`;
   };
-
+  
   carousel.querySelector('.prev').onclick = () => {
     index = (index - 1 + slides.length) % slides.length;
     track.style.transform = `translateX(-${index * 100}%)`;
   };
+
 });

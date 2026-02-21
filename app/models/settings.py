@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.extensions import db
 
 class Settings(db.Model):
@@ -6,4 +6,4 @@ class Settings(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     usd_to_uzs = db.Column(db.Integer, nullable=False, default=12500)
-    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

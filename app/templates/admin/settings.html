@@ -2,6 +2,7 @@
 
 <p style="margin-top:12px;">Hozirgi kurs: <span class="badge">1$ = {{ settings.usd_to_uzs }} so‘m</span></p>
 <form action="{{ url_for('admin.settings') }}" method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="row">
     <input style="width: 220px;" type="number" name="usd_to_uzs" min="1" value="{{ settings.usd_to_uzs }}" required>
   </div>

@@ -1,7 +1,7 @@
-
 <h4>Add product</h4>
 
 <form action="{{ url_for('admin.add_product') }}" method="post" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="row-2">
     <input type="text" name="title" placeholder="title" required>
     <div style="display: flex; gap: 10px; width: 100%;">
@@ -16,8 +16,8 @@
     <input type="text" name="description" placeholder="description">
     <input class="file" type="file" name="images" multiple>
     <div style="display: flex; gap: 10px; width: 100%;">
-        <input type="number" name="discount_percent" min="0" max="90" value="0" style="width: 50%; display: block;">
-        <button style="width: 50%; display: block;" type="submit">Qo'shish</button>
+      <input type="number" name="discount_percent" min="0" max="90" value="0" style="width: 50%; display: block;">
+      <button style="width: 50%; display: block;" type="submit">Qo'shish</button>
     </div>
   </div>
 </form>
@@ -27,49 +27,49 @@
 <form method="get" action="{{ url_for('admin.products') }}" id="get-form">
   <div class="row-2">
     <input style="width: 100%;" type="text" name="q" placeholder="Search by title/size/description"
-           value="{{ request.args.get('q','') }}">
+      value="{{ request.args.get('q','') }}">
 
-   <div style="display: flex; gap: 5px; width: 100%;">
-     
-    <select name="sort">
-       {% set cur_sort = request.args.get('sort','new') %}
-       <option value="new" {% if cur_sort=='new' %}selected{% endif %}>Eng yangi</option>
-       <option value="price_asc" {% if cur_sort=='price_asc' %}selected{% endif %}>Arzonidan</option>
-       <option value="price_desc" {% if cur_sort=='price_desc' %}selected{% endif %}>Qimmatidan</option>
-       <option value="discount_desc" {% if cur_sort=='discount_desc' %}selected{% endif %}>Chegirmalisidan</option>
-    </select>
-      
-    <div id="sizeHiddenBox"></div>
-    <button type="button" class="chip" data-open="#sizeModal">
-      Razmer
-      {% if selected_sizes %}<span class="dot"></span>{% endif %}
-    </button>
+    <div style="display: flex; gap: 5px; width: 100%;">
 
-   </div>
+      <select name="sort">
+        {% set cur_sort = request.args.get('sort','new') %}
+        <option value="new" {% if cur_sort=='new' %}selected{% endif %}>Eng yangi</option>
+        <option value="price_asc" {% if cur_sort=='price_asc' %}selected{% endif %}>Arzonidan</option>
+        <option value="price_desc" {% if cur_sort=='price_desc' %}selected{% endif %}>Qimmatidan</option>
+        <option value="discount_desc" {% if cur_sort=='discount_desc' %}selected{% endif %}>Chegirmalisidan</option>
+      </select>
+
+      <div id="sizeHiddenBox"></div>
+      <button type="button" class="chip" data-open="#sizeModal">
+        Razmer
+        {% if selected_sizes %}<span class="dot"></span>{% endif %}
+      </button>
+
+    </div>
   </div>
 
   <div style="height:10px"></div>
 
   <div class="row-2">
     <div style="display: flex; gap: 10px; width: 100%;">
-        <input type="number" name="min_price" placeholder="Narx dan:"
-           value="{{ request.args.get('min_price','') }}">
+      <input type="number" name="min_price" placeholder="Narx dan:" value="{{ request.args.get('min_price','') }}">
 
-        <input type="number" name="max_price" placeholder="Narx gacha:"
-           value="{{ request.args.get('max_price','') }}">
+      <input type="number" name="max_price" placeholder="Narx gacha:" value="{{ request.args.get('max_price','') }}">
     </div>
 
     <div style="display: flex; justify-content: space-between; gap: 10px; width: 100%;">
-        <label style=" width: 40%; color: var(--muted); font-size: 14px; display: flex; gap: 6px; align-items: center; justify-content: center;">
-          Faqat chegirmali
+      <label
+        style=" width: 40%; color: var(--muted); font-size: 14px; display: flex; gap: 6px; align-items: center; justify-content: center;">
+        Faqat chegirmali
 
-          <input style="width: 27px; height: 27px; cursor: pointer;" type="checkbox" name="discount" value="1"
-              {% if request.args.get('discount') == '1' %}checked{% endif %}>
-        </label>
+        <input style="width: 27px; height: 27px; cursor: pointer;" type="checkbox" name="discount" value="1" {% if
+          request.args.get('discount')=='1' %}checked{% endif %}>
+      </label>
 
-        <a style="padding: 10px 14px; width: 30%; justify-content: center; border-radius: 12px;" class="badge" href="{{ url_for('admin.products') }}">Qaytarish</a>
-        
-        <button style="width: 30%;" type="submit">Qo'llash</button>
+      <a style="padding: 10px 14px; width: 30%; justify-content: center; border-radius: 12px;" class="badge"
+        href="{{ url_for('admin.products') }}">Qaytarish</a>
+
+      <button style="width: 30%;" type="submit">Qo'llash</button>
     </div>
   </div>
 
@@ -80,178 +80,184 @@
 <h4 style="margin-top:18px;">Products</h4>
 
 {% if products %}
-  <div class="table-wrap">
-    <table>
-      <tr>
-        <th>ID</th>
-        <th>Images</th>
-        <th>Title</th>
-        <th>Size</th>
-        <th>Price</th>
-        <th>Discount</th>
-        <th>Status</th>
-        <th>Description</th>
-      </tr>
+<div class="table-wrap">
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Images</th>
+      <th>Title</th>
+      <th>Size</th>
+      <th>Price</th>
+      <th>Discount</th>
+      <th>Status</th>
+      <th>Description</th>
+    </tr>
 
-      {% for product in products %}
-      <tr>
-        <td>{{ loop.index }}</td>
+    {% for product in products %}
+    <tr>
+      <td>{{ loop.index }}</td>
 
-        <td>
-          {% if product.images %}
-          <img src="{{ url_for('static', filename='uploads/' ~ product.images[0].filename) }}" 
-               class="admin-product-img card"
+      <td>
+        {% if product.images %}
+        <img src="{{ url_for('static', filename='uploads/' ~ product.images[0].filename) }}"
+          class="admin-product-img card" data-id="{{ product.id }}" data-title="{{ product.title }}"
+          data-size="{{ product.size }}" data-price="{{ product.price | int}}"
+          data-discount="{{ product.discount_percent or 0 }}" data-description="{{ product.description or '' }}"
+          data-images='{{ (product.images | map(attribute="filename") | list) | tojson }}'>
+        {% endif %}
+      </td>
 
-               data-id="{{ product.id }}"
-               data-title="{{ product.title }}"
-               data-size="{{ product.size }}"
-               data-price="{{ product.price | int}}"
-               data-discount="{{ product.discount_percent or 0 }}"
-               data-description="{{ product.description or '' }}"
+      <td style="min-width: 200px;" class="card" data-id="{{ product.id }}" data-title="{{ product.title }}"
+        data-size="{{ product.size }}" data-price="{{ product.price | int}}"
+        data-discount="{{ product.discount_percent or 0 }}" data-description="{{ product.description or '' }}"
+        data-images='{{ (product.images | map(attribute="filename") | list) | tojson }}'>
+        <p>{{ product.title }}</p>
+      </td>
 
-               data-images='{{ (product.images | map(attribute="filename") | list) | tojson }}'
-          >
+      <td><span class="badge">{{ product.size }}</span></td>
+      <td style="min-width: 95px;">{{ product.price | uzs }}</td>
+
+      <td style="text-align: center; ">
+        <span style="display: block" class="badge">{{ product.discount_percent }}</span>
+      </td>
+      <td>
+        <form action="{{ url_for('admin.toggle_product', product_id=product.id) }}" method="post"
+          style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% if product.is_active %}
+          <button type="submit" class="status-btn on">Active</button>
+          {% else %}
+          <button type="submit" class="status-btn off">Hidden</button>
           {% endif %}
-        </td>
+        </form>
+      </td>
 
-        <td style="min-width: 200px;"
-            class="card"
+      <td class="desc-cell">
+        <span class="desc-text" data-title="{{ product.title }}" data-desc="{{ product.description|e }}">
+          {{ product.description }}
+        </span>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
 
-            data-id="{{ product.id }}"
-            data-title="{{ product.title }}"
-            data-size="{{ product.size }}"
-            data-price="{{ product.price | int}}"
-            data-discount="{{ product.discount_percent or 0 }}"
-            data-description="{{ product.description or '' }}"
-            data-images='{{ (product.images | map(attribute="filename") | list) | tojson }}'
-        >
-          <p>{{ product.title }}</p>
-        </td>
-        
-        <td><span class="badge">{{ product.size }}</span></td>
-        <td style="min-width: 95px;">{{ product.price | uzs }}</td>
+{% if pagination and pagination.pages > 1 %}
+<nav class="pagination">
+  {% if pagination.has_prev %}
+  <a href="{{ url_for('admin.products', page=pagination.prev_num, **request.args) }}" class="page-btn">‹</a>
+  {% endif %}
+  {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+  {% if p %}
+  <a href="{{ url_for('admin.products', page=p, **request.args) }}"
+    class="page-btn {% if p == pagination.page %}active{% endif %}">{{ p }}</a>
+  {% else %}
+  <span class="page-ellipsis">…</span>
+  {% endif %}
+  {% endfor %}
+  {% if pagination.has_next %}
+  <a href="{{ url_for('admin.products', page=pagination.next_num, **request.args) }}" class="page-btn">›</a>
+  {% endif %}
+</nav>
+{% endif %}
 
-        <td style="text-align: center; ">
-          <span style="display: block" class="badge">{{ product.discount_percent }}</span>
-        </td>
-        <td>
-          <form action="{{ url_for('admin.toggle_product', product_id=product.id) }}" method="post" style="display:inline;">
-            {% if product.is_active %}
-              <button type="submit" class="status-btn on">Active</button>
-            {% else %}
-              <button type="submit" class="status-btn off">Hidden</button>
-            {% endif %}
-          </form>
-        </td>
-
-        <td class="desc-cell">
-          <span class="desc-text"
-                data-title="{{ product.title }}"
-                data-desc="{{ product.description|e }}">
-            {{ product.description }}
-          </span>
-        </td>
-      </tr>
-      {% endfor %}
-    </table>
-  </div>
-
-  <!-- modal product edit -->
-  <div class="modal" id="editModal">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="modal-title">Edit Product</div>
-        <button type="button" class="x" id="editClose">✕</button>
-      </div>
-
-      <form method="post" id="editForm" enctype="multipart/form-data">
-        <div class="modal-body edit">
-
-          <div class="wrap-carousel">
-            <div class="carousel">
-              <div class="carousel-track" id="carousel-images"></div>
-              <button type="button" class="prev">‹</button>
-              <button type="button" class="delete-img" id="imgDeleteBtn">Delete this photo</button>
-              <input type="hidden" name="delete_images" id="deleteImages" value="[]">
-              <button type="button" class="next">›</button>
-            </div>
-
-            <div class="wrap-content">
-              <input type="text" name="title" id="editTitle" placeholder="Title">
-
-              <div class="wrap-title">
-                <input type="text" name="size" id="editSize" placeholder="Size">
-                <input type="number" name="price" id="editPrice" placeholder="Price">
-              </div>
-  
-  
-              <input type="hidden" name="product_id" id="editId">
-    
-    
-              <div class="wrap-image">
-                <input  type="file" name="images" multiple id="editImageInput" accept="image/*">
-                
-                <input type="number" name="discount_percent" id="editDiscount" placeholder="Discount %">
-              </div>
-            </div>
-          </div>
-          
-
-          <textarea name="description" rows="5" id="editDescription" placeholder="Description"></textarea>
-  
-          <div class="modal-actions">
-            <button type="button" class="danger" id="deleteBtn">Delete</button>
-            <button type="submit">Saqlash</button>
-          </div>
-
-        </div>
-
-      </form>
+<!-- modal product edit -->
+<div class="modal" id="editModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Edit Product</div>
+      <button type="button" class="x" id="editClose">✕</button>
     </div>
-  </div>
+
+    <form method="post" id="editForm" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="modal-body edit">
+
+        <div class="wrap-carousel">
+          <div class="carousel">
+            <div class="carousel-track" id="carousel-images"></div>
+            <button type="button" class="prev">‹</button>
+            <button type="button" class="delete-img" id="imgDeleteBtn">Delete this photo</button>
+            <input type="hidden" name="delete_images" id="deleteImages" value="[]">
+            <button type="button" class="next">›</button>
+          </div>
+
+          <div class="wrap-content">
+            <input type="text" name="title" id="editTitle" placeholder="Title">
+
+            <div class="wrap-title">
+              <input type="text" name="size" id="editSize" placeholder="Size">
+              <input type="number" name="price" id="editPrice" placeholder="Price">
+            </div>
 
 
-  <div class="modal" id="sizeModal">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="modal-title">Razmer tanlang</div>
-        <button type="button" class="x" data-close>✕</button>
-      </div>
+            <input type="hidden" name="product_id" id="editId">
 
-      <div>
-        <div class="sizes-list">
-          {% for s in sizes %}
-            {% set s_clean = (s or '')|string|trim %}
-            <label class="check">
-              <input type="checkbox" class="sizeCheck" value="{{ s_clean }}"
-                    {% if s_clean in selected_sizes %}checked{% endif %}>
-              <span>{{ s_clean }}</span>
-            </label>
-          {% endfor %}
+
+            <div class="wrap-image">
+              <input type="file" name="images" multiple id="editImageInput" accept="image/*">
+
+              <input type="number" name="discount_percent" id="editDiscount" placeholder="Discount %">
+            </div>
+          </div>
         </div>
+
+
+        <textarea name="description" rows="5" id="editDescription" placeholder="Description"></textarea>
 
         <div class="modal-actions">
-          <button type="button" class="ghost" id="clearSizes">Clear</button>
-          <button type="button" id="applySizes">Apply</button>
+          <button type="button" class="danger" id="deleteBtn">Delete</button>
+          <button type="submit">Saqlash</button>
         </div>
+
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+<div class="modal" id="sizeModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Razmer tanlang</div>
+      <button type="button" class="x" data-close>✕</button>
+    </div>
+
+    <div>
+      <div class="sizes-list">
+        {% for s in sizes %}
+        {% set s_clean = (s or '')|string|trim %}
+        <label class="check">
+          <input type="checkbox" class="sizeCheck" value="{{ s_clean }}" {% if s_clean in selected_sizes %}checked{%
+            endif %}>
+          <span>{{ s_clean }}</span>
+        </label>
+        {% endfor %}
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="ghost" id="clearSizes">Clear</button>
+        <button type="button" id="applySizes">Apply</button>
       </div>
     </div>
   </div>
+</div>
 
-  
 
-  <!-- Modal description view -->
-  <div class="modal" id="descModal">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="modal-title" id="modalTitle">Description</div>
-        <button class="modal-close" type="button" id="modalClose">Close</button>
-      </div>
-      <div class="modal-body" id="modalBody"></div>
+
+<!-- Modal description view -->
+<div class="modal" id="descModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">Description</div>
+      <button class="modal-close" type="button" id="modalClose">Close</button>
     </div>
+    <div class="modal-body" id="modalBody"></div>
   </div>
+</div>
 
 
 {% else %}
-  <p>Hali mahsulot yo'q</p>
+<p>Hali mahsulot yo'q</p>
 {% endif %}
